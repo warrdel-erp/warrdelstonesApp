@@ -1,32 +1,28 @@
 import React, { useEffect } from 'react';
-import AppModal from '../../components/ui/AppModal.tsx';
-import { InventoryProduct, SiplElement } from '../../types/InventoryTypes.ts';
-import { CheckBox } from '../../components/ui/CheckBox.tsx';
-import { useAppDispatch } from '../../store/hooks.ts';
-import { services } from '../../network';
-import { showErrorToast, showSuccessToast } from '../../utils';
-import {  View } from 'react-native';
-import { BodyText, Button, Caption, LabelValue, TextInput } from '../../components/ui';
-import theme from '../../theme';
-import Separator from '../../components/ui/Separator.tsx';
-import moment from 'moment';
-import Card from '../../components/ui/Card.tsx';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { InventoryProductCard } from '../../components/inventory/InventoryProductCard';
+import AppModal from '../../components/ui/AppModal.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
+import { services } from '../../network';
+import theme from '../../theme';
+import { InventoryProduct, SiplElement } from '../../types/InventoryTypes.ts';
+import { showErrorToast, showSuccessToast } from '../../utils';
 
 export interface UpdateProductsPricingModalProps {
   siplElement: SiplElement;
   visible: boolean;
   onClose: (refreshData: boolean) => void;
 }
+
 export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProps> = (props) => {
-const { siplElement } = props;
-const [allSelected, setAllSelected] = React.useState<Boolean>(true);
-const [allProducts, setAllProducts] = React.useState<InventoryProduct[]>([]);
-const [loading, setLoading] = React.useState<Boolean>(true);
-const [settingPrice, setSettingPrice] = React.useState<Boolean>(false);
-const [selectedProducts, setSelectedProducts] = React.useState<number[]>([]);
-const [newPrice, setNewPrice] = React.useState<string>('');
+
+  const { siplElement } = props;
+  const [allSelected, setAllSelected] = React.useState<Boolean>(true);
+  const [allInventoryProducts, setAllProducts] = React.useState<InventoryProduct[]>([]);
+  const [loading, setLoading] = React.useState<Boolean>(true);
+  const [settingPrice, setSettingPrice] = React.useState<Boolean>(false);
+  const [selectedProducts, setSelectedProducts] = React.useState<number[]>([]);
+  const [newPrice, setNewPrice] = React.useState<string>('');
 
   useEffect(() => {
     if (siplElement.id) {
@@ -71,7 +67,7 @@ const [newPrice, setNewPrice] = React.useState<string>('');
     if (allSelected) {
       setSelectedProducts([])
     } else {
-      const allIds = allProducts.map(product => product.id);
+      const allIds = allInventoryProducts.map(product => product.id);
       setSelectedProducts(allIds)
     }
     setAllSelected(!allSelected)
@@ -86,7 +82,7 @@ const [newPrice, setNewPrice] = React.useState<string>('');
   }
 
   useEffect(() => {
-    if (selectedProducts.length === allProducts.length) {
+    if (selectedProducts.length === allInventoryProducts.length) {
       setAllSelected(true)
     } else {
       setAllSelected(false)
@@ -96,15 +92,15 @@ const [newPrice, setNewPrice] = React.useState<string>('');
   return (
     <AppModal
       titleStyle={{ padding: 0 }}
-      contentStyle={{ padding: theme.spacing.none, gap: theme.spacing.sm }}
+      contentStyle={{ padding: theme.spacing.none, gap: theme.spacing.sm, backgroundColor: '#F3F4F6' }}
       visible={true}
-      onClose={()=> props.onClose(false)}
+      onClose={() => props.onClose(false)}
       fullScreen={true}
       renderInStatusBar={true}
       title={`Inventory Products - ${siplElement.invoiceCode}`}>
       {loading && <ScreenLoadingIndicator title={'Loading Products...'} />}
 
-      <View
+      {/* <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -116,10 +112,10 @@ const [newPrice, setNewPrice] = React.useState<string>('');
           checked={allSelected.valueOf()}
           onChange={(_: Boolean) => toggleSelection()}
         />
-        <BodyText>{`${selectedProducts.length} of ${allProducts.length} products selected`}</BodyText>
-      </View>
-      <Separator />
-      <View
+        <BodyText>{`${selectedProducts.length} of ${allInventoryProducts.length} products selected`}</BodyText>
+      </View> */}
+      {/* <Separator /> */}
+      {/* <View
         style={{
           flexDirection: 'row',
           paddingHorizontal: theme.spacing.sm,
@@ -136,39 +132,27 @@ const [newPrice, setNewPrice] = React.useState<string>('');
         <Button
           title={'Update'}
           onPress={updateSellingPrice}
-          loading={settingPrice}
+          loading={!!settingPrice}
           variant={'primary'}
           disabled={newPrice.length === 0 || selectedProducts.length === 0}
         />
-      </View>
+      </View> */}
       <KeyboardAwareScrollView
-        contentContainerStyle={{ gap: theme.spacing.sm, paddingHorizontal: theme.spacing.sm }}>
-        {allProducts.map(product => (
-          <Card
-            style={{
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: theme.spacing.md,
-              gap: theme.spacing.sm,
-            }}>
-            <View style={{ flexDirection: 'row' }}>
-              <CheckBox
-                key={product.id.toString()}
-                title={``}
-                checked={selectedProducts.includes(product.id)}
-                onChange={(_: Boolean) => toggleProductSelection(product.id)}
-              />
-              <BodyText>
-                {product.combinedNumber} | {product.bin.name} |{' '}
-                {product.bin.warehouse.location.location}
-              </BodyText>
-            </View>
-            <View style={{ paddingHorizontal: theme.spacing.xl, gap: theme.spacing.sm }}>
-              <LabelValue label={'Is Slab Type'} value={product.isSlabType ? 'Yes' : 'No'} />
-              <BodyText>Price: {product.sellingPrice}</BodyText>
-              <Caption>Created on: {moment(product.createdAt).format('DD/MMM/YYYY')}</Caption>
-            </View>
-          </Card>
+        contentContainerStyle={{
+          gap: theme.spacing.sm,
+          paddingHorizontal: theme.spacing.md,
+          backgroundColor: '#F3F4F6',
+          paddingVertical: theme.spacing.sm,
+        }}>
+        {allInventoryProducts.map((inventoryProduct, index) => (
+          <InventoryProductCard
+            key={inventoryProduct.id.toString()}
+            product={inventoryProduct}
+            isSelected={selectedProducts.includes(inventoryProduct.id)}
+            onSelectionChange={toggleProductSelection}
+            showCheckbox={true}
+            index={index}
+          />
         ))}
       </KeyboardAwareScrollView>
     </AppModal>

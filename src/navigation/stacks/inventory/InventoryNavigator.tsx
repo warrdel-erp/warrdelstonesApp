@@ -1,11 +1,11 @@
-import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ALL_ROLES, ScreenId, ScreenItem } from '../../navigationConstants.ts';
-import { createHeaderComponent } from '../../headerFactory.tsx';
+import React from 'react';
+import { BlockSlabsListScreen } from '../../../screens/inventory/BlockSlabsListScreen.tsx';
+import { BundleSlabsListScreen } from '../../../screens/inventory/BundleSlabsListScreen.tsx';
 import InventoryScreen from '../../../screens/inventory/InventoryScreen.tsx';
 import ProductDetailScreen from '../../../screens/inventory/ProductDetailScreen.tsx';
-import { BundleSlabsListScreen } from '../../../screens/inventory/BundleSlabsListScreen.tsx';
-import { BlockSlabsListScreen } from '../../../screens/inventory/BlockSlabsListScreen.tsx';
+import { createHeaderComponent } from '../../headerFactory.tsx';
+import { ALL_ROLES, ScreenId, ScreenItem } from '../../navigationConstants.ts';
 
 const Stack = createStackNavigator();
 
@@ -39,6 +39,7 @@ export const INVENTORY_SCREENS: ScreenItem[] = [
     isRoot: false,
   },
 ];
+
 export const InventoryNavigator: React.FC = () => {
   return (
     <Stack.Navigator>

@@ -5,12 +5,12 @@
  * @format
  */
 
-import React, { useEffect } from 'react';
-import { StatusBar, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StatusBar, StyleSheet, View } from 'react-native';
+import 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import 'react-native-gesture-handler';
 
 // Import theme
 import { theme } from './src/theme';
@@ -19,18 +19,19 @@ import { theme } from './src/theme';
 import ReduxProvider from './src/store/ReduxProvider';
 
 // Import navigation service
-import { navigationRef } from './src/navigation/NavigationService';
 import { AuthProvider, useAuthContext } from './src/context/AuthContext';
+import { navigationRef } from './src/navigation/NavigationService';
 
 // Import Auth Navigator
 import AuthNavigator from './src/navigation/AuthNavigator';
 
 // Import all screen components
-import MainAppNavigator from './src/navigation/MainAppNavigator.tsx';
 import Config from 'react-native-config';
+import GooglePlacesSDK from 'react-native-google-places-sdk';
 import SplashScreen from 'react-native-splash-screen';
 import { useAuthActions } from './src/hooks';
-import GooglePlacesSDK from 'react-native-google-places-sdk';
+import MainAppNavigator from './src/navigation/MainAppNavigator.tsx';
+
 function AppContent() {
   const { isAuthenticated, loading } = useAuthContext();
   const insets = useSafeAreaInsets();

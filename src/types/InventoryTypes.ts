@@ -149,6 +149,9 @@ export interface Sipl {
   totalArea?: number;
 }
 
+// Type alias for Sipl (used in inventory screens)
+export type SiplElement = Sipl;
+
 export interface PurchaseOrder {
   id: number;
   clientPoNumber: number;

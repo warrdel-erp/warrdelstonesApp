@@ -20,7 +20,7 @@
     "android:build:prod": "npm run android:bundle:prod && cd android && ENVFILE=../.env.prod ./gradlew assembleProdDebug",
     "android:share:dev": "npm run android:build:dev && open android/app/build/outputs/apk/dev/debug/",
     "android:share:prod": "npm run android:build:prod && open android/app/build/outputs/apk/prod/debug/",
-    "ios": "ENVFILE=.env.dev react-native run-ios",
+    "ios": "ENVFILE=.env.dev react-native run-ios --mode=devDebug",
     "ios:install": "cd ios && pod cache clean --all && pod deintegrate && pod update && pod install",
     "ios:dev": "ENVFILE=.env.dev react-native run-ios --mode=Debug",
     "ios:prod": "ENVFILE=.env.prod react-native run-ios --mode=Release",

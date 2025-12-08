@@ -1,19 +1,19 @@
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import { FlatList, ListRenderItemInfo, TouchableOpacity, View } from 'react-native';
-import theme from '../../theme';
-import { EmptyList } from '../../components/ui/EmptyList.tsx';
-import { useAppDispatch, useAppState, useInventory } from '../../store/hooks.ts';
-import { Inventory, SiplElement } from '../../types/InventoryTypes.ts';
-import { getInventory } from '../../store/slices/inventorySlice.ts';
-import { showErrorToast } from '../../utils';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Accordion, AccordionGroup, Heading4, LabelValue } from '../../components/ui';
 import Card from '../../components/ui/Card.tsx';
+import { EmptyList } from '../../components/ui/EmptyList.tsx';
+import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import NavigationService from '../../navigation/NavigationService.ts';
 import { ScreenId } from '../../navigation/navigationConstants.ts';
-import { Accordion, AccordionGroup, Heading4, LabelValue } from '../../components/ui';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useAppDispatch, useAppState, useInventory } from '../../store/hooks.ts';
+import { getInventory } from '../../store/slices/inventorySlice.ts';
+import theme from '../../theme';
+import { Inventory, SiplElement } from '../../types/InventoryTypes.ts';
+import { showErrorToast } from '../../utils';
 import { UpdateProductsPricingModal } from './UpdateProductsPricingModal.tsx';
-import { useFocusEffect } from '@react-navigation/native';
 
 export const InventoryBySiplPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -28,7 +28,7 @@ export const InventoryBySiplPage: React.FC = () => {
           getInventory({ locationId: selectedLocation.id, params: { page: 1, limit: 2000 } }),
         );
       }
-      return () => {};
+      return () => { };
     }, [selectedLocation, dispatch]),
   );
 
@@ -62,7 +62,7 @@ export const InventoryBySiplPage: React.FC = () => {
           )}
         </View>
         <View style={{ flexDirection: 'row', flex: 1 }}>
-          <LabelValue containerStyle={{ flex: 1 }} label={'Kind:'} value={item.kind} />
+          <LabelValue containerStyle={{ flex: 1 }} label={'Kind:'} value={item.kind?.name} />
           <LabelValue
             containerStyle={{ flex: 1 }}
             alignment={'right'}
@@ -83,6 +83,7 @@ export const InventoryBySiplPage: React.FC = () => {
             value={item.group?.name ?? 'NA'}
           />
         </View>
+
 
         <AccordionGroup allowMultiple={true} gap={theme.spacing.sm}>
           <Accordion contentStyle={{ gap: theme.spacing.xs }}>
@@ -111,6 +112,7 @@ export const InventoryBySiplPage: React.FC = () => {
             ))}
           </Accordion>
         </AccordionGroup>
+
       </Card>
     );
   };
@@ -121,16 +123,17 @@ export const InventoryBySiplPage: React.FC = () => {
         <ScreenLoadingIndicator title={'Loading Inventory...'} />
       ) : (
         <FlatList
+          renderItem={renderInventoryItem}
           data={inventory?.data}
           keyExtractor={item => (item.id + item.name).toString()}
           ItemSeparatorComponent={ItemSeparator}
-          renderItem={renderInventoryItem}
           contentContainerStyle={{ padding: theme.spacing.sm }}
           ListEmptyComponent={() => <EmptyList />}
         />
       )}
       {selectedSipl && (
         <UpdateProductsPricingModal
+          visible={true}
           onClose={(refreshData: boolean) => {
             setSelectedSipl(null);
             if (refreshData) {

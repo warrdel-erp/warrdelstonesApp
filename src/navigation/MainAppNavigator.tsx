@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import StaffNavigator from './StaffNavigator.tsx';
-import StudentNavigator from './StudentNavigator.tsx';
+import DrawerNavigator from './DrawerNavigator.tsx';
 
 function MainAppNavigator() {
   const { loading, authState } = useAuthContext();
@@ -10,7 +9,7 @@ function MainAppNavigator() {
     return null;
   }
 
-  return !authState?.user?.email ? <StaffNavigator /> : <StudentNavigator />;
+  return <DrawerNavigator />;
 }
 
 export default MainAppNavigator;

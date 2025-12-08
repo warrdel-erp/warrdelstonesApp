@@ -1,26 +1,25 @@
+import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import React, { useState } from 'react';
 import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { textStyles, theme } from '../theme';
 import { useAuthContext } from '../context/AuthContext';
+import NavigationService from '../navigation/NavigationService';
 import {
   DrawerMenuItem,
-  getNavigationItemsByRole,
-  StackId,
+  getNavigationItemsByRole
 } from '../navigation/navigationConstants';
-import NavigationService from '../navigation/NavigationService';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuthState } from '../store/hooks.ts';
+import { textStyles, theme } from '../theme';
+import { UserRole, UserRoleValue } from '../types/userTypes.ts';
 import { Caption, Heading6 } from './ui';
 import IconButton from './ui/IconButton.tsx';
-import { useAuthState } from '../store/hooks.ts';
-import { UserRole, UserRoleValue } from '../types/userTypes.ts';
 
 interface ExpandableMenuItemProps {
   item: DrawerMenuItem;
@@ -71,10 +70,12 @@ const ExpandableMenuItem: React.FC<ExpandableMenuItemProps> = ({
         style={[styles.menuItem, level > 0 && styles.subMenuItem]}
         onPress={toggleExpanded}
         activeOpacity={0.7}>
+
         <View style={styles.menuItemContent}>
           <Icon name={item.icon} size={24} style={styles.menuIcon} />
           <Text style={[styles.menuText, level > 0 && styles.subMenuText]}>{item.title}</Text>
         </View>
+
         {item.children && (
           <Animated.View style={rotationStyle}>
             <Icon name="chevron-right" size={20} color={theme.colors.text.primary} />
@@ -138,7 +139,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
         <View style={[styles.header]}>
           <View style={{ flex: 1, gap: theme.spacing.md }}>
             <TouchableOpacity
-              onPress={() => {}}
+              onPress={() => { }}
               style={{
                 flexDirection: 'row',
                 gap: theme.spacing.sm,
@@ -170,14 +171,14 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
                 variant={'outlined'}
                 outlineColor={theme.colors.text.onPrimary}
                 iconName={'notifications'}
-                onPress={() => {}}
+                onPress={() => { }}
               />
               <IconButton
                 size={'small'}
                 outlineColor={theme.colors.text.onPrimary}
                 variant={'outlined'}
                 iconName={'message'}
-                onPress={() => {}}
+                onPress={() => { }}
               />
             </View>
           </View>

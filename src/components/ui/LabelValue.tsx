@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, ViewStyle, TextStyle } from 'react-native';
-import { BodyText } from './Typography';
+import { TextStyle, View, ViewStyle } from 'react-native';
 import { theme } from '../../theme';
+import { BodyText } from './Typography';
 
 interface LabelValueProps {
   label: string;

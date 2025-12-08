@@ -126,50 +126,50 @@ export interface Theme {
 
 export const theme: Theme = {
   colors: {
-    primary: "#3976b3",
-    primaryDark: "#245e98",
-    primaryLight: "#63a2df",
-    secondary: "#465fff",
-    secondaryDark: "#5a7bff",
-    secondaryLight: "#5a7bff",
+    primary: '#0891B2',
+    primaryDark: '#1F2937',
+    primaryLight: '#06B6D4',
+    secondary: '#14B8A6',
+    secondaryDark: '#0D9488',
+    secondaryLight: '#2DD4BF',
     transparent: 'transparent',
     black: '#000',
-    button: "#5a7bff",
-    yellow: "#f0b000",
+    button: '#0891B2',
+    yellow: '#F59E0B',
 
     // Background colors
-    background: '#fafbfc',
-    surface: '#fff',
-    surfaceVariant: '#F5F5F5',
+    background: '#FAFBFC',
+    surface: '#FFFFFF',
+    surfaceVariant: '#F8F9FA',
     white: '#FFFFFF',
-    link: '#0D6EFD',
+    link: '#0891B2',
     // Text colors
     text: {
-      primary: "#344054",
-      secondary: "#616161",
-      highlight: "#3976b3",
-      disabled: "#9E9E9E",
-      onPrimary: '#fff',
-      caption: "#94a3b8",
-      green: "#15803d",
-      onSurface: "#1e1e1e",
-      muted: "#f9fafc",
+      primary: '#1F2937',
+      secondary: '#6B7280',
+      highlight: '#0891B2',
+      disabled: '#9CA3AF',
+      onPrimary: '#FFFFFF',
+      caption: '#9CA3AF',
+      green: '#059669',
+      onSurface: '#1F2937',
+      muted: '#F9FAFB',
     },
 
     // Border colors
     border: {
-      light: '#fafafa',
-      medium: '#e2e8f0',
-      dark: '#9E9E9E',
+      light: '#F3F4F6',
+      medium: '#E5E7EB',
+      dark: '#D1D5DB',
     },
 
     // Status colors
     status: {
-      success: "#3aba0d",
-      warning: '#FF9800',
-      error: '#F44336',
-      info: '#2196F3',
-      disabled: '#DCDEE2',
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444',
+      info: '#06B6D4',
+      disabled: '#D1D5DB',
     },
 
     // Shadow color
