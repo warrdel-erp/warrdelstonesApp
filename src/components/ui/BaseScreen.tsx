@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, ScrollView } from 'react-native';
-import theme from '../../theme';
+import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import theme from '../../theme';
 
 interface BaseScreenProps {
   children: React.ReactNode;

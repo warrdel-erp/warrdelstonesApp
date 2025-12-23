@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { getTokens, useTheme } from 'tamagui';
 import { InventoryProductCard } from '../../components/inventory/InventoryProductCard';
 import AppModal from '../../components/ui/AppModal.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import { services } from '../../network';
-import theme from '../../theme';
 import { InventoryProduct, SiplElement } from '../../types/InventoryTypes.ts';
 import { showErrorToast, showSuccessToast } from '../../utils';
 
@@ -15,7 +15,8 @@ export interface UpdateProductsPricingModalProps {
 }
 
 export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProps> = (props) => {
-
+  const tokens = getTokens();
+  const theme = useTheme();
   const { siplElement } = props;
   const [allSelected, setAllSelected] = React.useState<Boolean>(true);
   const [allInventoryProducts, setAllProducts] = React.useState<InventoryProduct[]>([]);
@@ -92,7 +93,7 @@ export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProp
   return (
     <AppModal
       titleStyle={{ padding: 0 }}
-      contentStyle={{ padding: theme.spacing.none, gap: theme.spacing.sm, backgroundColor: '#F3F4F6' }}
+      contentStyle={{ padding: 0, gap: tokens.space[2].val, backgroundColor: theme.backgroundSecondary?.val }}
       visible={true}
       onClose={() => props.onClose(false)}
       fullScreen={true}
@@ -139,10 +140,10 @@ export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProp
       </View> */}
       <KeyboardAwareScrollView
         contentContainerStyle={{
-          gap: theme.spacing.sm,
-          paddingHorizontal: theme.spacing.md,
-          backgroundColor: '#F3F4F6',
-          paddingVertical: theme.spacing.sm,
+          gap: tokens.space[2].val,
+          paddingHorizontal: tokens.space[4].val,
+          backgroundColor: theme.backgroundSecondary?.val || '#F3F4F6',
+          paddingVertical: tokens.space[2].val,
         }}>
         {allInventoryProducts.map((inventoryProduct, index) => (
           <InventoryProductCard

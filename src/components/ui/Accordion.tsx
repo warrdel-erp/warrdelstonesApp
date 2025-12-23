@@ -1,17 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
   Animated,
-  ViewStyle,
-  TextStyle,
-  LayoutAnimation,
   Platform,
+  Text,
+  TextStyle,
+  TouchableOpacity,
   UIManager,
+  View,
+  ViewStyle
 } from 'react-native';
-import { theme, textStyles, componentStyles } from '../../theme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { textStyles, theme } from '../../theme';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -34,6 +33,9 @@ interface AccordionProps {
   animationDuration?: number;
 }
 
+/**
+ * @deprecated
+ */
 export const Accordion: React.FC<AccordionProps> = ({
   title,
   header,
@@ -180,7 +182,7 @@ export const Accordion: React.FC<AccordionProps> = ({
           transform: [{ rotate: rotateInterpolate }],
         },
       ]}>
-      <Icon name={'keyboard-arrow-down'} size={24}/>
+      <Icon name={'keyboard-arrow-down'} size={24} />
     </Animated.View>
   );
 
@@ -236,6 +238,10 @@ interface AccordionGroupProps {
   gap?: number;
 }
 
+
+/**
+ * @deprecated
+ */
 export const AccordionGroup: React.FC<AccordionGroupProps> = ({
   children,
   allowMultiple = false,

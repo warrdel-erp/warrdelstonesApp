@@ -1,21 +1,23 @@
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import { FlatList, ListRenderItemInfo, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Accordion, AccordionGroup, Heading4, LabelValue } from '../../components/ui';
-import Card from '../../components/ui/Card.tsx';
+import { YStack, getTokens, useTheme } from 'tamagui';
+import { Heading } from '../../components/ui';
+import CardWithHeader from '../../components/ui/CardWithHeader';
+import DetailGridRenderer from '../../components/ui/DetailGridRenderer';
 import { EmptyList } from '../../components/ui/EmptyList.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import NavigationService from '../../navigation/NavigationService.ts';
 import { ScreenId } from '../../navigation/navigationConstants.ts';
 import { useAppDispatch, useAppState, useInventory } from '../../store/hooks.ts';
 import { getInventory } from '../../store/slices/inventorySlice.ts';
-import theme from '../../theme';
 import { Inventory, SiplElement } from '../../types/InventoryTypes.ts';
 import { showErrorToast } from '../../utils';
 import { UpdateProductsPricingModal } from './UpdateProductsPricingModal.tsx';
 
 export const InventoryBySiplPage: React.FC = () => {
+  const tokens = getTokens();
+  const theme = useTheme();
   const dispatch = useAppDispatch();
   const { selectedLocation } = useAppState();
   const { inventory, loading, error } = useInventory();
@@ -38,87 +40,103 @@ export const InventoryBySiplPage: React.FC = () => {
     }
   }, [error]);
 
-  const ItemSeparator = () => <View style={{ height: theme.spacing.sm }} />;
+  const ItemSeparator = () => <View style={{ height: tokens.space[2].val }} />;
 
   const renderInventoryItem = (listData: ListRenderItemInfo<Inventory>) => {
     const { item } = listData;
     return (
-      <Card
+      <TouchableOpacity
         key={item.id.toString()}
-        style={{ backgroundColor: theme.colors.surface }}
-        onClick={() => {
+        onPress={() => {
           NavigationService.navigate(ScreenId.PRODUCT_DETAIL, { productId: item.id });
-        }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            gap: theme.spacing.sm,
-            alignItems: 'baseline',
-          }}>
-          <Heading4>{item.name}</Heading4>
-          {item.origin && (
-            <LabelValue containerStyle={{ flex: 1 }} label={'from'} value={item.origin.name} />
+        }}
+        activeOpacity={0.9}>
+        <CardWithHeader
+          title={
+            <Heading
+              level={4}
+              icon="Package"
+              iconColor={theme.primary?.val}
+              subheading={item.origin ? `from ${item.origin.name}` : undefined}>
+              {item.name}
+            </Heading>
+          }>
+          <DetailGridRenderer
+            items={[
+              {
+                label: 'Kind',
+                value: (item.kind as any)?.value,
+                flex: 1,
+              },
+              {
+                label: 'Subcategory',
+                value: item.subCategory.name,
+                flex: 2,
+              },
+              {
+                label: 'Color',
+                value: item.baseColor?.name ?? 'NA',
+                flex: 1,
+              },
+              {
+                label: 'Group',
+                value: item.group?.name ?? 'NA',
+                flex: 1,
+              },
+            ]}
+            gap={tokens.space[2].val}
+            containerProps={{
+              marginBottom: item.sipls?.length ? tokens.space[4].val : 0,
+            }}
+          />
+
+          {item.sipls?.length > 0 && (
+            <YStack gap={tokens.space[3].val}>
+              {item.sipls.map((spl, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setSelectedSipl(spl)}
+                  activeOpacity={0.9}>
+                  <CardWithHeader
+                    variant="highlighted"
+                    color="blue"
+                    containerProps={{
+                      marginVertical: 0,
+                    }}>
+                    <DetailGridRenderer
+                      items={[
+                        {
+                          label: 'SIPL',
+                          value: spl.invoiceCode,
+                          flex: 1,
+                          valueStyle: { fontWeight: 'bold' },
+                        },
+                        {
+                          label: 'Total Units',
+                          value: spl.inventoryProducts?.length,
+                          flex: 1,
+                        },
+                        {
+                          label: 'Quantity',
+                          value: `${(((spl.totalArea ?? 0) / 144).toFixed(2))} Sqft`,
+                          flex: 1,
+                        },
+                      ]}
+                      gap={tokens.space[4].val}
+                    />
+                  </CardWithHeader>
+                </TouchableOpacity>
+              ))}
+            </YStack>
           )}
-        </View>
-        <View style={{ flexDirection: 'row', flex: 1 }}>
-          <LabelValue containerStyle={{ flex: 1 }} label={'Kind:'} value={item.kind?.name} />
-          <LabelValue
-            containerStyle={{ flex: 1 }}
-            alignment={'right'}
-            label={'Subcategory:'}
-            value={item.subCategory.name}
-          />
-        </View>
-        <View style={{ flexDirection: 'row', flex: 1 }}>
-          <LabelValue
-            containerStyle={{ flex: 1 }}
-            label={'Color:'}
-            value={item.baseColor?.name ?? 'NA'}
-          />
-          <LabelValue
-            containerStyle={{ flex: 1 }}
-            label={'Group:'}
-            alignment={'right'}
-            value={item.group?.name ?? 'NA'}
-          />
-        </View>
-
-
-        <AccordionGroup allowMultiple={true} gap={theme.spacing.sm}>
-          <Accordion contentStyle={{ gap: theme.spacing.xs }}>
-            {item.sipls.map(spl => (
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center' }}
-                onPress={() => setSelectedSipl(spl)}>
-                <LabelValue
-                  containerStyle={{ flex: 1 }}
-                  label={'SIPL No:'}
-                  value={spl.invoiceCode}
-                />
-                <LabelValue
-                  containerStyle={{ flex: 1 }}
-                  label={'Total Units:'}
-                  value={spl.slabs?.length ?? spl.genericProducts?.length}
-                />
-                <LabelValue
-                  containerStyle={{ flex: 1 }}
-                  alignment={'right'}
-                  label={'Qty:'}
-                  value={(((spl.totalArea ?? 0) / 144).toFixed(2) ?? '0') + ' Sqft'}
-                />
-                <Icon name={'keyboard-arrow-right'} size={18} />
-              </TouchableOpacity>
-            ))}
-          </Accordion>
-        </AccordionGroup>
-
-      </Card>
+        </CardWithHeader>
+      </TouchableOpacity>
     );
   };
 
+  console.log(inventory?.data);
   return (
-    <View>
+    <View style={{ flex: 1, backgroundColor: theme.backgroundSecondary?.val }}>
       {loading ? (
         <ScreenLoadingIndicator title={'Loading Inventory...'} />
       ) : (
@@ -127,7 +145,7 @@ export const InventoryBySiplPage: React.FC = () => {
           data={inventory?.data}
           keyExtractor={item => (item.id + item.name).toString()}
           ItemSeparatorComponent={ItemSeparator}
-          contentContainerStyle={{ padding: theme.spacing.sm }}
+          contentContainerStyle={{ padding: tokens.space[2].val }}
           ListEmptyComponent={() => <EmptyList />}
         />
       )}
@@ -136,7 +154,7 @@ export const InventoryBySiplPage: React.FC = () => {
           visible={true}
           onClose={(refreshData: boolean) => {
             setSelectedSipl(null);
-            if (refreshData) {
+            if (refreshData && selectedLocation) {
               dispatch(
                 getInventory({ locationId: selectedLocation.id, params: { page: 1, limit: 2000 } }),
               );

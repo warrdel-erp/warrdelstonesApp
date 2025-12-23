@@ -11,6 +11,10 @@ import { ActivityIndicator, StatusBar, StyleSheet, View } from 'react-native';
 import 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import { TamaguiProvider } from 'tamagui';
+
+// Import Tamagui config
+import config from './tamagui.config';
 
 // Import theme
 import { theme } from './src/theme';
@@ -64,17 +68,19 @@ function AppContent() {
 
 function App() {
   return (
-    <ReduxProvider>
-      <AuthProvider>
-        <SafeAreaProvider>
-          <StatusBar barStyle="light-content" backgroundColor={theme.colors.primaryDark} />
-          <NavigationContainer ref={navigationRef}>
-            <AppContent />
-          </NavigationContainer>
-          <Toast />
-        </SafeAreaProvider>
-      </AuthProvider>
-    </ReduxProvider>
+    <TamaguiProvider config={config} defaultTheme="light">
+      <ReduxProvider>
+        <AuthProvider>
+          <SafeAreaProvider>
+            <StatusBar barStyle="light-content" backgroundColor={theme.colors.primaryDark} />
+            <NavigationContainer ref={navigationRef}>
+              <AppContent />
+            </NavigationContainer>
+            <Toast />
+          </SafeAreaProvider>
+        </AuthProvider>
+      </ReduxProvider>
+    </TamaguiProvider>
   );
 }
 

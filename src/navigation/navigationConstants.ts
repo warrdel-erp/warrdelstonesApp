@@ -1,32 +1,33 @@
-import { UserRole, UserRoleValue } from '../types/userTypes';
 import React from 'react';
-import { SalesNavigator } from './stacks/sales/SalesNavigator.tsx';
-import { InvoicesNavigator } from './stacks/sales/InvoicesNavigator.tsx';
-import { PurchaseNavigator } from './stacks/expenses/PurchaseNavigator.tsx';
-import { FreightBillsNavigator } from './stacks/expenses/FreightBillsNavigator.tsx';
-import { SuppliersNavigator } from './stacks/initiate/SuppliersNavigator.tsx';
+import { UserRole, UserRoleValue } from '../types/userTypes';
+import { AccountPayableNavigator } from './stacks/accounting/AccountPayableNavigator.tsx';
+import { AccountReceivableNavigator } from './stacks/accounting/AccountReceivableNavigator.tsx';
+import { BalanceSheetNavigator } from './stacks/accounting/BalanaceSheetNavigator.tsx';
+import { ChartsOfAccountsNavigator } from './stacks/accounting/ChartsOfAccountsNavigator.tsx';
+import { CreditDebitNoteNavigator } from './stacks/accounting/CreditDebitNoteNavigator.tsx';
 import { GeneralLedgerNavigator } from './stacks/accounting/GeneralLedgerNavigator.tsx';
 import { TransactionsNavigator } from './stacks/accounting/TransactionsNavigator.tsx';
-import { InventoryNavigator } from './stacks/inventory/InventoryNavigator.tsx';
-import { ProductsNavigator } from './stacks/initiate/ProductsNavigator.tsx';
 import { DashboardNavigator } from './stacks/dashboard/DashboardNavigator.tsx';
+import { DemoNavigator } from './stacks/demo/DemoNavigator.tsx';
+import { FreightBillsNavigator } from './stacks/expenses/FreightBillsNavigator.tsx';
+import { PurchaseNavigator } from './stacks/expenses/PurchaseNavigator.tsx';
 import { VendorInvoicesNavigator } from './stacks/expenses/VendorInvoicesNavigator.tsx';
 import { CustomersNavigator } from './stacks/initiate/CustomersNavigator.tsx';
-import { VendorsNavigator } from './stacks/initiate/VendorsNavigator.tsx';
+import { ProductsNavigator } from './stacks/initiate/ProductsNavigator.tsx';
 import { ServicesNavigator } from './stacks/initiate/ServicesNavigator.tsx';
+import { SuppliersNavigator } from './stacks/initiate/SuppliersNavigator.tsx';
 import { TrucksNavigator } from './stacks/initiate/TrucksNavigator.tsx';
-import { DeliveriesNavigator } from './stacks/sales/DeliveriesNavigator.tsx';
-import { ReturnsNavigator } from './stacks/sales/ReturnsNavigator.tsx';
+import { VendorsNavigator } from './stacks/initiate/VendorsNavigator.tsx';
+import { InventoryNavigator } from './stacks/inventory/InventoryNavigator.tsx';
 import { TransfersNavigator } from './stacks/inventory/TransfersNavigator.tsx';
-import { AccountReceivableNavigator } from './stacks/accounting/AccountReceivableNavigator.tsx';
-import { ChartsOfAccountsNavigator } from './stacks/accounting/ChartsOfAccountsNavigator.tsx';
-import { BalanceSheetNavigator } from './stacks/accounting/BalanaceSheetNavigator.tsx';
-import { CreditDebitNoteNavigator } from './stacks/accounting/CreditDebitNoteNavigator.tsx';
-import { UserRolesNavigator } from './stacks/settings/UserRolesNavigator.tsx';
-import { PermissionsNavigator } from './stacks/settings/PermissionsNavigator.tsx';
+import { DeliveriesNavigator } from './stacks/sales/DeliveriesNavigator.tsx';
+import { InvoicesNavigator } from './stacks/sales/InvoicesNavigator.tsx';
+import { ReturnsNavigator } from './stacks/sales/ReturnsNavigator.tsx';
+import { SalesNavigator } from './stacks/sales/SalesNavigator.tsx';
 import { LocationsNavigator } from './stacks/settings/LocationsNavigator.tsx';
+import { PermissionsNavigator } from './stacks/settings/PermissionsNavigator.tsx';
+import { UserRolesNavigator } from './stacks/settings/UserRolesNavigator.tsx';
 import { UsersNavigator } from './stacks/settings/UsersNavigator.tsx';
-import { AccountPayableNavigator } from './stacks/accounting/AccountPayableNavigator.tsx';
 
 export const StackId = {
   HOME: 'HomeStack',
@@ -63,6 +64,7 @@ export const StackId = {
   PERMISSIONS: 'PermissionsStack',
   LOCATIONS: 'LocationsStack',
   PROFILE: 'ProfileStack',
+  DEMO_STACK: 'DemoStack',
 } as const;
 
 export const ScreenId = {
@@ -113,6 +115,14 @@ export const ScreenId = {
   PROFILE: 'Profile',
   RESET_PASSWORD: 'ResetPasswordScreen',
   SETTINGS: 'Settings',
+  COMPONENT_DEMO: 'ComponentDemo',
+  ICONS_DEMO: 'IconsDemo',
+  BUTTONS_DEMO: 'ButtonsDemo',
+  HEADING_DEMO: 'HeadingDemo',
+  STATUS_BADGES_DEMO: 'StatusBadgesDemo',
+  FORM_COMPONENTS_DEMO: 'FormComponentsDemo',
+  CARD_WITH_HEADER_DEMO: 'CardWithHeaderDemo',
+  TABS_DEMO: 'TabsDemo',
   CLASS_ROUTINE: 'ClassRoutine',
   MY_CLASSES: 'MyClasses',
   SYLLABUS: 'Syllabus',
@@ -442,6 +452,66 @@ const SETTINGS_STACK: DrawerMenuItem = {
   roles: ALL_ROLES,
 };
 
+export const DEMO_NAVIGATORS: DrawerMenuItem[] = [
+  {
+    id: ScreenId.ICONS_DEMO,
+    title: 'Icons',
+    icon: 'image',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: ScreenId.BUTTONS_DEMO,
+    title: 'Buttons',
+    icon: 'radio-button-checked',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: ScreenId.HEADING_DEMO,
+    title: 'Heading',
+    icon: 'title',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: ScreenId.STATUS_BADGES_DEMO,
+    title: 'Status Badges',
+    icon: 'label',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: ScreenId.FORM_COMPONENTS_DEMO,
+    title: 'Form Components',
+    icon: 'edit',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: ScreenId.CARD_WITH_HEADER_DEMO,
+    title: 'CardWithHeader',
+    icon: 'view-card',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: ScreenId.TABS_DEMO,
+    title: 'Tabs',
+    icon: 'tab',
+    component: DemoNavigator,
+    roles: ALL_ROLES,
+  },
+];
+
+const DEMO_STACK: DrawerMenuItem = {
+  id: StackId.DEMO_STACK,
+  title: 'Component Demos',
+  icon: 'palette',
+  children: DEMO_NAVIGATORS,
+  roles: ALL_ROLES,
+};
+
 export const ADMIN_DRAWER_CONFIG: DrawerMenuItem[] = [
   DASHBOARD_STACK,
   INVENTORY_STACK,
@@ -450,6 +520,7 @@ export const ADMIN_DRAWER_CONFIG: DrawerMenuItem[] = [
   INITIATE_STACK,
   ACCOUNTING_STACK,
   SETTINGS_STACK,
+  DEMO_STACK,
 ];
 
 const ROLE_DRAWER_CONFIGS: Record<UserRoleValue, DrawerMenuItem[]> = {

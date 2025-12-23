@@ -8,7 +8,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useAuthContext } from '../context/AuthContext';
 import NavigationService from '../navigation/NavigationService';
 import {
@@ -18,7 +17,7 @@ import {
 import { useAuthState } from '../store/hooks.ts';
 import { textStyles, theme } from '../theme';
 import { UserRole, UserRoleValue } from '../types/userTypes.ts';
-import { Caption, Heading6 } from './ui';
+import { Caption, Heading6, Icon } from './ui';
 import IconButton from './ui/IconButton.tsx';
 
 interface ExpandableMenuItemProps {
@@ -72,13 +71,13 @@ const ExpandableMenuItem: React.FC<ExpandableMenuItemProps> = ({
         activeOpacity={0.7}>
 
         <View style={styles.menuItemContent}>
-          <Icon name={item.icon} size={24} style={styles.menuIcon} />
+          <Icon name={item.icon} family="MaterialIcons" size={24} style={styles.menuIcon} />
           <Text style={[styles.menuText, level > 0 && styles.subMenuText]}>{item.title}</Text>
         </View>
 
         {item.children && (
           <Animated.View style={rotationStyle}>
-            <Icon name="chevron-right" size={20} color={theme.colors.text.primary} />
+            <Icon name="chevron-right" family="MaterialIcons" size={20} color={theme.colors.text.primary} />
           </Animated.View>
         )}
       </TouchableOpacity>
@@ -208,8 +207,10 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
           <View style={styles.menuItemContent}>
             <Icon
               name="logout"
+              family="MaterialIcons"
               size={24}
-              style={[styles.menuIcon, { color: theme.colors.status.error }]}
+              color={theme.colors.status.error}
+              style={styles.menuIcon}
             />
             <Text style={styles.logoutText}>Logout</Text>
           </View>

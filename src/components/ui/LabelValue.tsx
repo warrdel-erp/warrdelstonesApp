@@ -21,6 +21,10 @@ interface LabelValueProps {
   };
 }
 
+/**
+ * 
+ * @deprecated
+ */
 export const LabelValue: React.FC<LabelValueProps> = ({
   label,
   value,

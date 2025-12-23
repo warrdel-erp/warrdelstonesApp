@@ -144,6 +144,7 @@ export interface Sipl {
   createdAt: Date;
   updatedAt: Date;
   slabs: Slab[];
+  inventoryProducts: any[];
   genericProducts: GenericProduct[];
   purchaseOrder: PurchaseOrder;
   totalArea?: number;

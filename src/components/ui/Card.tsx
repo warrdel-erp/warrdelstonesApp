@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ViewProps, TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View, ViewProps } from 'react-native';
 import { componentStyles } from '../../theme';
 
 interface CardProps extends ViewProps {
@@ -9,6 +9,9 @@ interface CardProps extends ViewProps {
   disabled?: boolean;
 }
 
+/**
+ * @deprecated
+ */
 export const Card: React.FC<CardProps> = ({
   elevated = false,
   children,
