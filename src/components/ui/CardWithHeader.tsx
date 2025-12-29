@@ -1,7 +1,8 @@
 import { MoreVertical } from '@tamagui/lucide-icons';
 import React, { ReactNode } from 'react';
 import { ViewStyle } from 'react-native';
-import { getTokens, Text, useTheme, XStack, YStack, YStackProps } from 'tamagui';
+import { getTokens, useTheme, XStack, YStack, YStackProps } from 'tamagui';
+import { Heading } from '.';
 import ActionMenu, { ActionMenuItem } from './ActionMenu';
 import { Badge } from './Badge';
 
@@ -41,6 +42,8 @@ export interface CardWithHeaderProps {
     headerBorder?: boolean;
     /** Gap between header and body */
     bodyGap?: number;
+    /** Subheading text */
+    subheading?: string;
 }
 
 export const CardWithHeader: React.FC<CardWithHeaderProps> = ({
@@ -55,6 +58,7 @@ export const CardWithHeader: React.FC<CardWithHeaderProps> = ({
     style,
     headerBorder = false,
     bodyGap,
+    subheading,
 }) => {
     const tokens = getTokens();
     const theme = useTheme();
@@ -191,12 +195,14 @@ export const CardWithHeader: React.FC<CardWithHeaderProps> = ({
                         borderBottomColor={headerBorder ? (theme.borderLight?.val || '#F3F4F6') : 'transparent'}>
                         <YStack flex={1} marginRight={tokens.space[2].val}>
                             {typeof title === 'string' ? (
-                                <Text
-                                    fontSize={tokens.size[4].val}
-                                    fontWeight="bold"
-                                    color={theme.textPrimary?.val || '#1F2937'}>
+                                <Heading
+                                    // fontSize={tokens.size[4].val}
+                                    // fontWeight="bold"
+                                    color={theme.textPrimary?.val || '#1F2937'}
+                                    subheading={subheading}
+                                >
                                     {title}
-                                </Text>
+                                </Heading>
                             ) : (
                                 title
                             )}

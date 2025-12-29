@@ -134,7 +134,6 @@ export const InventoryBySiplPage: React.FC = () => {
     );
   };
 
-  console.log(inventory?.data);
   return (
     <View style={{ flex: 1, backgroundColor: theme.backgroundSecondary?.val }}>
       {loading ? (

@@ -8,6 +8,7 @@ import HeadingDemoScreen from '../../../screens/demo/HeadingDemoScreen.tsx';
 import IconsDemoScreen from '../../../screens/demo/IconsDemoScreen.tsx';
 import StatusBadgesDemoScreen from '../../../screens/demo/StatusBadgesDemoScreen.tsx';
 import TabsDemoScreen from '../../../screens/demo/TabsDemoScreen.tsx';
+import TableDemoScreen from '../../../screens/demo/TableDemoScreen.tsx';
 import { createHeaderComponent } from '../../headerFactory.tsx';
 import { ALL_ROLES, ScreenId, ScreenItem } from '../../navigationConstants.ts';
 
@@ -60,6 +61,13 @@ export const DEMO_SCREENS: ScreenItem[] = [
         id: ScreenId.TABS_DEMO,
         title: 'Tabs',
         component: TabsDemoScreen,
+        roles: ALL_ROLES,
+        isRoot: false,
+    },
+    {
+        id: ScreenId.TABLE_DEMO,
+        title: 'Mobile Table',
+        component: TableDemoScreen,
         roles: ALL_ROLES,
         isRoot: false,
     },

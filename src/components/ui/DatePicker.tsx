@@ -1,327 +1,201 @@
-import React, { useState, useCallback, forwardRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { theme } from '../../theme';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Calendar } from '@tamagui/lucide-icons';
+import React, { useState } from 'react';
+import { Modal, Platform, TouchableOpacity } from 'react-native';
+import {
+  Input,
+  Text,
+  XStack,
+  YStack,
+  getTokens,
+  useTheme,
+} from 'tamagui';
 
 export interface DatePickerProps {
-  // Label
-  label?: string;
-  mandatory?: boolean;
-  labelStyle?: TextStyle;
-
-  // Date picker behavior
-  value?: Date;
-  onChange?: (date: Date) => void;
-  mode?: 'date' | 'time' | 'datetime';
-  minimumDate?: Date;
-  maximumDate?: Date;
-  disabled?: boolean;
-
-  // Appearance
+  value?: Date | string | null;
+  onChange: (date: Date | undefined) => void;
   placeholder?: string;
-  style?: ViewStyle;
-  dateFormat?: (date: Date) => string;
-
-  // Error handling
-  error?: string;
-  errorStyle?: TextStyle;
-
-  // Container styling
-  containerStyle?: ViewStyle;
-
-  // Accessibility
-  testID?: string;
+  disabled?: boolean;
 }
 
-export const DatePicker = forwardRef<View, DatePickerProps>(
-  (
-    {
-      label,
-      mandatory = false,
-      labelStyle,
-      value,
-      onChange,
-      mode = 'date',
-      minimumDate,
-      maximumDate,
-      disabled = false,
-      placeholder = 'Select date',
-      style,
-      dateFormat,
-      error,
-      errorStyle,
-      containerStyle,
-      testID,
-    },
-    ref,
-  ) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const [showPicker, setShowPicker] = useState(false);
+export const DatePicker: React.FC<DatePickerProps> = ({
+  value,
+  onChange,
+  placeholder = 'dd-MM-yyyy',
+  disabled = false,
+}) => {
+  const tokens = getTokens();
+  const theme = useTheme();
+  const [showPicker, setShowPicker] = useState(false);
 
-    // Default date formatter
-    const defaultDateFormat = useCallback(
-      (date: Date): string => {
-        if (mode === 'time') {
-          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        } else if (mode === 'datetime') {
-          return date.toLocaleString();
-        } else {
-          return date.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          });
-        }
-      },
-      [mode],
-    );
+  const dateValue: Date | undefined =
+    value instanceof Date ? value : value ? new Date(value) : undefined;
 
-    const formatDate = dateFormat || defaultDateFormat;
+  const formatDate = (date: Date): string => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
-    // Handle date selection
-    const handleDateChange = useCallback(
-      (event: any, selectedDate?: Date) => {
+  const displayText = dateValue ? formatDate(dateValue) : '';
+  const displayPlaceholder = placeholder || 'dd-MM-yyyy';
+
+  const handleChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowPicker(false);
+    }
+    if (selectedDate) {
+      onChange(selectedDate);
+      if (Platform.OS === 'ios') {
         setShowPicker(false);
-        setIsFocused(false);
+      }
+    }
+  };
 
-        if (event.type === 'dismissed') {
-          return;
-        }
+  const handleConfirm = () => {
+    setShowPicker(false);
+  };
 
-        if (selectedDate && onChange) {
-          onChange(selectedDate);
-        }
-      },
-      [onChange],
-    );
+  return (
+    <YStack width="100%">
+      <XStack
+        width="100%"
+        borderWidth={1}
+        borderRadius={tokens.radius[3].val}
+        borderColor={theme.borderMedium?.val || '#E5E7EB'}
+        backgroundColor={disabled ? theme.backgroundHover?.val || '#F9FAFB' : theme.background?.val || '#FFFFFF'}
+        alignItems="center"
+        overflow="hidden"
+        opacity={disabled ? 0.6 : 1}
+        paddingHorizontal={tokens.space[3].val}
+        paddingVertical={tokens.space[2].val}
+        minHeight={tokens.size[4].val}
+      >
+        <Input
+          flex={1}
+          value={displayText}
+          placeholder={displayPlaceholder}
+          placeholderTextColor={theme.textCaption?.val || '#9CA3AF'}
+          editable={false}
+          pointerEvents="none"
+          fontSize={tokens.size[3.5].val}
+          color={
+            dateValue
+              ? theme.textPrimary?.val || '#111827'
+              : theme.textCaption?.val || '#9CA3AF'
+          }
+          borderWidth={0}
+          backgroundColor="transparent"
+          paddingHorizontal={0}
+          paddingVertical={0}
+        />
+        <XStack
+          backgroundColor={theme.backgroundHover?.val || '#F3F4F6'}
+          paddingHorizontal={tokens.space[3].val}
+          paddingVertical={tokens.space[2].val}
+          alignItems="center"
+          justifyContent="center"
+          borderLeftWidth={1}
+          borderLeftColor={theme.borderMedium?.val || '#E5E7EB'}
+          marginLeft={tokens.space[2].val}
+          marginRight={-tokens.space[3].val}
+          marginVertical={-tokens.space[2].val}
+        >
+          <TouchableOpacity
+            onPress={() => !disabled && setShowPicker(true)}
+            disabled={disabled}
+            activeOpacity={0.7}
+          >
+            <Calendar
+              size={20}
+              color={theme.textCaption?.val || '#9CA3AF'}
+            />
+          </TouchableOpacity>
+        </XStack>
+      </XStack>
 
-    // Handle press to open picker
-    const handlePress = useCallback(() => {
-      if (disabled) return;
-
-      setIsFocused(true);
-      setShowPicker(true);
-    }, [disabled]);
-
-    const hasValue = value !== undefined && value !== null;
-    const hasError = error && error.length > 0;
-
-    // Get display text
-    const displayText = hasValue ? formatDate(value) : placeholder;
-
-    return (
-      <View style={[styles.container, containerStyle]} ref={ref}>
-        {/* Label */}
-        {label && (
-          <View style={styles.labelContainer}>
-            <Text style={[styles.label, labelStyle]}>
-              {label}
-              {mandatory && <Text style={styles.mandatory}> *</Text>}
-            </Text>
-          </View>
-        )}
-
-        {/* Input Container */}
-        <TouchableOpacity
-          style={[
-            styles.inputContainer,
-            isFocused && styles.inputContainerFocused,
-            hasError && styles.inputContainerError,
-            disabled && styles.inputContainerDisabled,
-            style,
-          ]}
-          onPress={handlePress}
-          disabled={disabled}
-          testID={testID}
-          activeOpacity={0.7}>
-          {/* Display Text */}
-          <Text
-            style={[
-              styles.input,
-              !hasValue && styles.placeholderText,
-              disabled && styles.inputDisabled,
-            ]}>
-            {displayText}
-          </Text>
-
-          <Icon
-            name="event"
-            size={24}
-            color={
-              disabled
-                ? theme.colors.text.disabled
-                : isFocused
-                  ? theme.colors.primaryDark
-                  : theme.colors.primaryLight
-            }
-            style={styles.icon}
+      {Platform.OS === 'ios' ? (
+        <Modal
+          visible={showPicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowPicker(false)}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: tokens.space[4].val,
+            }}
+            activeOpacity={1}
+            onPress={() => setShowPicker(false)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: theme.background?.val || '#FFFFFF',
+                borderRadius: tokens.radius[4].val,
+                width: '100%',
+                maxWidth: 400,
+                padding: tokens.space[4].val,
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
+            >
+              <YStack gap={tokens.space[3].val}>
+                <XStack
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Text
+                    fontSize={tokens.size[5].val}
+                    fontWeight="600"
+                    color={theme.textPrimary?.val || '#111827'}
+                  >
+                    Select Date
+                  </Text>
+                  <TouchableOpacity onPress={handleConfirm}>
+                    <Text
+                      fontSize={tokens.size[4].val}
+                      color={theme.primary?.val || '#0891B2'}
+                      fontWeight="600"
+                    >
+                      Done
+                    </Text>
+                  </TouchableOpacity>
+                </XStack>
+                <DateTimePicker
+                  value={dateValue || new Date()}
+                  mode="date"
+                  display="spinner"
+                  onChange={handleChange}
+                />
+              </YStack>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      ) : (
+        showPicker && (
+          <DateTimePicker
+            value={dateValue || new Date()}
+            mode="date"
+            display="default"
+            onChange={handleChange}
           />
-        </TouchableOpacity>
-
-        {/* Error Message */}
-        {hasError && (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, errorStyle]}>{error}</Text>
-          </View>
-        )}
-
-        {/* Date Picker */}
-        {showPicker && (
-          <>
-            {Platform.OS === 'android' && (
-              <DateTimePicker
-                value={value || new Date()}
-                mode={mode === 'datetime' ? 'date' : mode}
-                display={mode === 'time' ? 'clock' : 'spinner'}
-                onChange={handleDateChange}
-                minimumDate={minimumDate}
-                maximumDate={maximumDate}
-              />
-            )}
-            {Platform.OS === 'ios' && (
-              <DateTimePicker
-                value={value || new Date()}
-                mode={mode}
-                display="default"
-                onChange={handleDateChange}
-                minimumDate={minimumDate}
-                maximumDate={maximumDate}
-              />
-            )}
-          </>
-        )}
-      </View>
-    );
-  },
-);
-
-DatePicker.displayName = 'DatePicker';
-
-const styles = StyleSheet.create({
-  container: {},
-  labelContainer: {
-    marginBottom: theme.spacing.xs,
-  },
-  label: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    fontFamily: theme.typography.fontFamily.regular,
-  },
-  mandatory: {
-    color: theme.colors.status.error,
-  },
-  inputContainer: {
-    borderWidth: 1,
-    borderColor: theme.colors.border.dark,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  inputContainerFocused: {
-    borderColor: theme.colors.primary,
-    borderWidth: 2,
-  },
-  inputContainerError: {
-    borderColor: theme.colors.status.error,
-    borderWidth: 2,
-  },
-  inputContainerDisabled: {
-    backgroundColor: theme.colors.surfaceVariant,
-    borderColor: theme.colors.border.dark,
-  },
-  input: {
-    flex: 1,
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.primary,
-    fontFamily: theme.typography.fontFamily.regular,
-    paddingRight: theme.spacing.sm,
-  },
-  placeholderText: {
-    color: theme.colors.text.disabled,
-  },
-  inputDisabled: {
-    color: theme.colors.text.disabled,
-  },
-  icon: {
-    marginLeft: theme.spacing.xs,
-  },
-  errorContainer: {
-    marginTop: theme.spacing.xs,
-  },
-  errorText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.status.error,
-    fontFamily: theme.typography.fontFamily.regular,
-  },
-  iosPickerContainer: {
-    marginTop: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    padding: theme.spacing.sm,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iosPickerWrapper: {
-    width: '100%',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    overflow: 'hidden',
-  },
-  iosPickerHeader: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    alignItems: 'flex-end',
-  },
-  doneButton: {
-    color: theme.colors.text.surface,
-    fontSize: theme.typography.fontSize.sm,
-    fontFamily: theme.typography.fontFamily.semiBold,
-  },
-  iosPicker: {
-    width: '100%',
-    backgroundColor: theme.colors.surface,
-  },
-  pickerTitle: {
-    color: theme.colors.text.surface,
-    fontSize: theme.typography.fontSize.md,
-    fontFamily: theme.typography.fontFamily.semiBold,
-  },
-  closeButton: {
-    padding: theme.spacing.xs,
-  },
-  modalContent: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-});
+        )
+      )}
+    </YStack>
+  );
+};
 
 export default DatePicker;

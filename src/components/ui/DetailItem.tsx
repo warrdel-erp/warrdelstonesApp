@@ -186,14 +186,14 @@ export const DetailGrid: React.FC<DetailGridProps> = ({
     const tokens = getTokens();
     const defaultGap = gap !== undefined ? gap : tokens.space[4].val;
     return (
-        <XStack
+    <XStack
             gap={defaultGap}
-            flexWrap="wrap"
-            justifyContent={justifyContent}
-            alignItems={alignItems}>
-            {children}
-        </XStack>
-    );
+        flexWrap="wrap"
+        justifyContent={justifyContent}
+        alignItems={alignItems}>
+        {children}
+    </XStack>
+);
 };
 
 export default DetailItem;

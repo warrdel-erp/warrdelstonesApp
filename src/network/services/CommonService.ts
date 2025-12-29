@@ -1,24 +1,19 @@
-import { BaseService } from '../base/BaseService';
-import { ApiClient } from '../base/ApiClient';
 import {
   BasePageRequest,
-  Bin,
   BinsResponse,
   ClientUsersResponse,
-  CustomersAmounts,
   CustomersAmountsResponse,
   GeneralDataResponse,
   LocationsResponse,
   OpenPosResponse,
   PaginatedResponse,
-  ProductAccounts,
   ProductAccountsResponse,
-  VendorsAmounts,
   VendorsAmountsResponse,
 } from '../../types/CommonTypes.ts';
-import { ApiResponse } from '../types/ApiResponseTypes.ts';
-import { InventoryResponse, PaginationData } from '../../types/InventoryTypes.ts';
 import { DataMapUtils } from '../../utils/DataMapUtils.ts';
+import { ApiClient } from '../base/ApiClient';
+import { BaseService } from '../base/BaseService';
+import { ApiResponse } from '../types/ApiResponseTypes.ts';
 
 export type ChangePasswordPayload = {
   email: string;
@@ -104,5 +99,17 @@ export class CommonService extends BaseService {
 
   async getClientUsers(): Promise<ApiResponse<ClientUsersResponse>> {
     return this.makeRequest(() => this.apiClient.get(`/api/user/clientUsers`));
+  }
+
+  async getOptions(
+    endpoint: string,
+    queryParams?: Record<string, any>,
+  ): Promise<
+    ApiResponse<{ success: boolean; message?: string; data: Array<{ label: string; value: any }> }>
+  > {
+    const params = queryParams ? DataMapUtils.objectToParams(queryParams) : undefined;
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/options/${endpoint}`, params ? { params } : undefined),
+    );
   }
 }

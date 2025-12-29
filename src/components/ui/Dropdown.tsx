@@ -1,21 +1,21 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-  Pressable,
-  Dimensions,
   Animated,
-  StatusBar,
+  Dimensions,
+  FlatList,
+  Modal,
   Platform,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
 } from 'react-native';
-import { theme } from '../../theme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { theme } from '../../theme';
 import { BodyText, Button } from './index.tsx';
 
 export interface DropdownOption<T = any> {
@@ -65,6 +65,9 @@ export interface DropdownProps<T = any> {
   testID?: string;
 }
 
+/**
+ * @deprecated
+ */
 export const Dropdown = <T,>({
   options,
   value,
