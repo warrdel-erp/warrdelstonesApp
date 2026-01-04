@@ -501,9 +501,8 @@ const MobileTable = memo(<T extends Record<string, any>>({
                             <YStack width={40} minWidth={40} alignItems="center">
                                 {isSelectable && (
                                     <CheckBox
-                                        title=""
                                         checked={isSelected}
-                                        onChange={(checked: Boolean) => handleSelectRow(rowId, Boolean(checked))}
+                                        onChange={(checked: boolean) => handleSelectRow(rowId, checked)}
                                     />
                                 )}
                             </YStack>
@@ -571,7 +570,6 @@ const MobileTable = memo(<T extends Record<string, any>>({
                 {/* Expanded Content */}
                 {isExpanded && expandableRows && (
                     <YStack
-                        backgroundColor={theme.backgroundSecondary?.val}
                         padding={tokens.space[4].val}
                         borderBottomWidth={1}
                         borderBottomColor={theme.borderMedium?.val}
@@ -762,7 +760,6 @@ const MobileTable = memo(<T extends Record<string, any>>({
             {selectable && (
                 <YStack width={40} minWidth={40} alignItems="center">
                     <CheckBox
-                        title=""
                         checked={selectedRows.length === data.length && data.length > 0}
                         onChange={handleSelectAll}
                     />
@@ -813,7 +810,7 @@ const MobileTable = memo(<T extends Record<string, any>>({
     );
 
     return (
-        <YStack flex={1} backgroundColor={theme.backgroundSecondary?.val} >
+        <YStack flex={1} >
             {!nested && renderHeader()}
 
             {loading ? (

@@ -76,6 +76,7 @@ export const ScreenId = {
   TRANSFERS: 'Transfers',
   SALES_ORDER_LIST: 'SalesList',
   ADD_SALES_ORDER: 'AddSalesOrder',
+  SALES_ORDER_DETAIL: 'SalesOrderDetail',
   INVOICES_LIST: 'InvoicesList',
   DELIVERIES_LIST: 'DeliveriesList',
   RETURNS_LIST: 'ReturnsList',

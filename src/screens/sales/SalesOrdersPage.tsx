@@ -150,7 +150,7 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
       <TouchableOpacity
         key={item.id.toString()}
         onPress={() => {
-          console.log('Navigate to SO detail:', item.id);
+          NavigationService.navigate(ScreenId.SALES_ORDER_DETAIL, { salesOrderId: item.id });
         }}
         activeOpacity={0.9}
       >
@@ -158,7 +158,15 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
           subheading='Sales Order'
           title={
             `SO-${item.clientSoNumber}`
-          }>
+          }
+          actions={[{
+            label: 'View',
+            // icon: 'eye',
+            onPress: () => {
+              NavigationService.navigate(ScreenId.SALES_ORDER_DETAIL, { salesOrderId: item.id });
+            },
+          }]}
+        >
           <DetailGridRenderer items={detailItems} gap={tokens.space[3].val} />
         </CardWithHeader>
       </TouchableOpacity>

@@ -71,7 +71,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const theme = useTheme();
     const { control, formState } = form;
 
-    const renderFieldInput = (field: FormFieldConfig, value: any, onChange: (value: any) => void) => {
+    const renderFieldInput = (field: FormFieldConfig, value: any, onChange: (value: any) => void, hasError: boolean) => {
 
         switch (field.type) {
             case 'text':
@@ -82,6 +82,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         onChange={onChange}
                         placeholder={field.placeholder}
                         type={field.type}
+                        hasError={hasError}
                     />
                 );
 
@@ -91,6 +92,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         value={value}
                         onChange={onChange}
                         placeholder={field.placeholder}
+                        hasError={hasError}
                     />
                 );
 
@@ -130,6 +132,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         onSelectionChange={(val) => onChange(val)}
                         multiSelect={field.multiSelect}
                         placeholder={field.placeholder}
+                        hasError={hasError}
                     />
                 );
             }
@@ -140,6 +143,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         value={value}
                         onChange={(date) => onChange(date)}
                         placeholder={field.placeholder}
+                        hasError={hasError}
                     />
                 );
             }
@@ -192,6 +196,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         const width = field.width ?? '48%';
                         const fieldError = formState.errors[field.name];
                         const errorMessage = fieldError?.message as string | undefined;
+                        const hasError = !!errorMessage;
 
                         return (
                             <FormFieldWrapper
@@ -205,14 +210,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                                 <Controller
                                     name={field.name}
                                     control={control}
-                                    rules={{
-                                        required: field.required
-                                            ? field.rules?.required || `${field.label} is required`
-                                            : field.rules?.required || false,
-                                        ...(field.rules || {}),
-                                    }}
                                     render={({ field: { value, onChange } }) => {
-                                        const input = renderFieldInput(field, value, onChange);
+                                        const input = renderFieldInput(field, value, onChange, hasError);
                                         return input || <Text>Unsupported field type</Text>;
                                     }}
                                 />

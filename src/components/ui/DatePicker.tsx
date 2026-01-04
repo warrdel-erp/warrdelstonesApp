@@ -16,6 +16,8 @@ export interface DatePickerProps {
   onChange: (date: Date | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  error?: boolean;
+  hasError?: boolean;
 }
 
 export const DatePicker: React.FC<DatePickerProps> = ({
@@ -23,10 +25,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   onChange,
   placeholder = 'dd-MM-yyyy',
   disabled = false,
+  error = false,
+  hasError = false,
 }) => {
   const tokens = getTokens();
   const theme = useTheme();
   const [showPicker, setShowPicker] = useState(false);
+  const showError = error || hasError;
 
   const dateValue: Date | undefined =
     value instanceof Date ? value : value ? new Date(value) : undefined;
@@ -63,7 +68,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         width="100%"
         borderWidth={1}
         borderRadius={tokens.radius[3].val}
-        borderColor={theme.borderMedium?.val || '#E5E7EB'}
+        borderColor={showError ? theme.statusError?.val || '#DC2626' : theme.borderMedium?.val || '#E5E7EB'}
         backgroundColor={disabled ? theme.backgroundHover?.val || '#F9FAFB' : theme.background?.val || '#FFFFFF'}
         alignItems="center"
         overflow="hidden"

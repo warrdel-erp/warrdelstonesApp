@@ -11,6 +11,8 @@ export interface FormTextAreaProps {
     placeholder?: string;
     numberOfLines?: number;
     disabled?: boolean;
+    error?: boolean;
+    hasError?: boolean;
 }
 
 export const FormTextArea: React.FC<FormTextAreaProps> = ({
@@ -19,9 +21,12 @@ export const FormTextArea: React.FC<FormTextAreaProps> = ({
     placeholder,
     numberOfLines = 4,
     disabled = false,
+    error = false,
+    hasError = false,
 }) => {
     const tokens = getTokens();
     const theme = useTheme();
+    const showError = error || hasError;
 
     return (
         <Input
@@ -31,7 +36,6 @@ export const FormTextArea: React.FC<FormTextAreaProps> = ({
             placeholder={placeholder || 'Type here'}
             paddingHorizontal={tokens.space[3].val}
             paddingVertical={tokens.space[2].val}
-            // minHeight={100}
             fontSize={tokens.size[3.5].val}
             backgroundColor={theme.background?.val}
             textAlignVertical="top"
@@ -39,6 +43,9 @@ export const FormTextArea: React.FC<FormTextAreaProps> = ({
             width={'100%'}
             opacity={disabled ? 0.6 : 1}
             onChangeText={(text) => onChange(text || undefined)}
+            borderColor={showError ? theme.statusError?.val || '#DC2626' : theme.borderMedium?.val || '#D1D5DB'}
+            borderWidth={1}
+            borderRadius={tokens.radius[3].val}
         />
     );
 };

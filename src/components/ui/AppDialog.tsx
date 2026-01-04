@@ -100,7 +100,8 @@ export const AppDialog: React.FC<AppDialogProps> = ({
             <Dialog.Portal>
                 <Dialog.Overlay
                     key="overlay"
-                    opacity={0.5}
+                    opacity={0.8}
+                    backgroundColor="rgba(0, 0, 0)"
                     enterStyle={{ opacity: 0 }}
                     exitStyle={{ opacity: 0 }}
                 />
@@ -121,7 +122,7 @@ export const AppDialog: React.FC<AppDialogProps> = ({
                     <YStack gap={tokens.space[3].val}>
                         {renderHeader()}
                         <ScrollView
-                            style={{ width: 300 }}
+                            style={{ maxHeight: 500 }}
                             showsVerticalScrollIndicator={true}
                         >
                             {children}

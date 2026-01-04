@@ -15,3 +15,14 @@
 1. date input fix.
 2. input sizes fixing.
 3. table component for mobile. [big-one]
+
+---
+
+1. dialog component.
+2. add product implementation in Create SO with table.
+
+---
+
+1. form validations.
+2. successful creation of SO from app. (but not as much featured as web).
+3. working on SO details page.

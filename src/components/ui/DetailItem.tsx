@@ -15,6 +15,8 @@ export interface DetailItemProps {
     fallback?: string;
     labelStyle?: any;
     valueStyle?: any;
+    /** Allow text to wrap instead of truncating. Defaults to false (truncates) */
+    wrapText?: boolean;
 }
 
 export const DetailItem: React.FC<DetailItemProps> = ({
@@ -26,6 +28,7 @@ export const DetailItem: React.FC<DetailItemProps> = ({
     fallback = '--',
     labelStyle,
     valueStyle,
+    wrapText = false,
 }) => {
     const tokens = getTokens();
     const theme = useTheme();
@@ -87,7 +90,7 @@ export const DetailItem: React.FC<DetailItemProps> = ({
                     fontSize={tokens.size[3.5].val}
                     fontWeight="normal"
                     color={theme.textPrimary?.val || '#1F2937'}
-                    numberOfLines={1}
+                    {...(wrapText ? {} : { numberOfLines: 1 })}
                     {...valueStyle}>
                     {value || fallback}
                 </Text>
@@ -186,14 +189,14 @@ export const DetailGrid: React.FC<DetailGridProps> = ({
     const tokens = getTokens();
     const defaultGap = gap !== undefined ? gap : tokens.space[4].val;
     return (
-    <XStack
+        <XStack
             gap={defaultGap}
-        flexWrap="wrap"
-        justifyContent={justifyContent}
-        alignItems={alignItems}>
-        {children}
-    </XStack>
-);
+            flexWrap="wrap"
+            justifyContent={justifyContent}
+            alignItems={alignItems}>
+            {children}
+        </XStack>
+    );
 };
 
 export default DetailItem;

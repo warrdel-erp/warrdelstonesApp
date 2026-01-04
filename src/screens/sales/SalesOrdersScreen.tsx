@@ -1,13 +1,9 @@
 import React, { useCallback } from 'react';
+import { View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 import BaseScreen from '../../components/ui/BaseScreen.tsx';
 import Tabs, { TabItem } from '../../components/ui/Tabs.tsx';
-import { InventoryBySiplPage } from '../inventory/InventoryBySiplPage.tsx';
-import { InventoryByBundlePage } from '../inventory/InventoryByBundlePage.tsx';
-import { InventoryByBlockPage } from '../inventory/InventoryByBlockPage.tsx';
-import PagerView from 'react-native-pager-view';
 import theme from '../../theme';
-import { BodyText } from '../../components/ui';
-import { View } from 'react-native';
 import { SalesOrdersPage } from './SalesOrdersPage.tsx';
 
 const tabs: TabItem[] = [
@@ -36,6 +32,7 @@ const tabs: TabItem[] = [
     label: 'Closed',
   },
 ];
+
 export const SalesOrdersScreen: React.FC = () => {
   const pagerViewRef = React.useRef<PagerView>(null);
   const [selectedTab, setSelectedTab] = React.useState(0);

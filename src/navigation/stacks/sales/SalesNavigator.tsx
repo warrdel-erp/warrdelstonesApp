@@ -1,6 +1,7 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import AddSalesOrderScreen from '../../../screens/sales/AddSalesOrderScreen.tsx';
+import SalesOrderDetailScreen from '../../../screens/sales/SalesOrderDetailScreen.tsx';
 import { SalesOrdersScreen } from '../../../screens/sales/SalesOrdersScreen.tsx';
 import { createHeaderComponent } from '../../headerFactory.tsx';
 import { ALL_ROLES, ScreenId, ScreenItem } from '../../navigationConstants.ts';
@@ -20,6 +21,14 @@ export const SALES_SCREENS: ScreenItem[] = [
     title: 'Create Sales Order',
     parentStack: 'Sales',
     component: AddSalesOrderScreen,
+    roles: ALL_ROLES,
+    isRoot: false,
+  },
+  {
+    id: ScreenId.SALES_ORDER_DETAIL,
+    title: 'Sales Order Detail',
+    parentStack: 'Sales',
+    component: SalesOrderDetailScreen,
     roles: ALL_ROLES,
     isRoot: false,
   },

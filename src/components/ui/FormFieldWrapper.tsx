@@ -21,6 +21,11 @@ export const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
     const theme = useTheme();
 
     const hasError = !!error;
+    // Check if error is only a required error (contains "required" and is simple)
+    const isRequiredOnlyError = hasError && required && (
+        error.toLowerCase().includes('required') ||
+        error.toLowerCase().includes('is required')
+    );
 
     return (
         <YStack
@@ -48,16 +53,22 @@ export const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                 </XStack>
             )}
 
-            {children}
+            {React.isValidElement(children)
+                ? React.cloneElement(children as React.ReactElement<any>, {
+                    error: hasError,
+                    hasError: hasError,
+                })
+                : children}
 
-            {hasError ? (
+            {/* Only show error text if it's NOT a required-only error */}
+            {hasError && !isRequiredOnlyError ? (
                 <Text
                     fontSize={tokens.size[3].val}
-                    color={theme.statusError?.val || '#DC2626'}
+                    color={theme.statusError?.val}
                 >
                     {error}
                 </Text>
-            ) : helperText ? (
+            ) : helperText && !hasError ? (
                 <Text
                     fontSize={tokens.size[3].val}
                     color={theme.textCaption?.val || '#9CA3AF'}

@@ -1,24 +1,60 @@
-import { Package, Plus } from '@tamagui/lucide-icons';
+import { Plus } from '@tamagui/lucide-icons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Text, YStack, getTokens, useTheme } from 'tamagui';
+import { Text, XStack, YStack, getTokens, useTheme } from 'tamagui';
 import { useAsyncLoader } from '../../hooks';
 import { services } from '../../network';
+import { AppDialog } from '../ui/AppDialog';
 import Button from '../ui/Button';
-import MobileTable, { Column, RowAction } from '../ui/MobileTable';
+import MobileTable, { Column } from '../ui/MobileTable';
 
 // Types based on API response
 interface Slab {
     id: number;
+    serialNumber: number;
+    slabNumber: number;
+    packageLength: number;
+    packageWidth: number;
     receivingLength: number;
     receivingWidth: number;
+    block: string;
+    lot: string;
+    barcode: string;
+    status: string;
+    packagedSqrFt: number;
+    receivedSqrFt: number;
+}
+
+interface Bin {
+    id: number;
+    name: string;
+    warehouse: {
+        id: number;
+        locationId: number;
+        location: {
+            location: string;
+            id: number;
+        };
+    };
 }
 
 interface InventoryProduct {
     id: number;
+    binId: number;
+    siplId: number;
+    sellingPrice: number;
+    landedUnitCost: number;
     status: string;
+    combinedNumber: string;
+    productId: number;
     isSlabType: boolean;
     hold: string | null;
     slab: Slab;
+    genericProduct: any | null;
+    product: {
+        id: number;
+        name: string;
+    };
+    bin: Bin;
 }
 
 interface Product {
@@ -36,6 +72,7 @@ interface Product {
     };
     totalAvailableQuantity: string;
     totalAvailableUnits: number;
+    singleUnitPrice: string;
     inventoryProducts: InventoryProduct[];
     [key: string]: any;
 }
@@ -52,9 +89,15 @@ interface CompactProductResponse {
     };
 }
 
+export interface SelectedInventoryProduct {
+    inventoryProductId: number;
+    unitPrice: string;
+    taxApplied: boolean;
+}
+
 interface AddProductsToSOProps {
-    /** Callback when products are selected */
-    onProductsSelected?: (selectedProducts: Product[]) => void;
+    /** Callback when inventory products are selected */
+    onProductsSelected?: (selectedProducts: SelectedInventoryProduct[]) => void;
     /** Button label */
     buttonLabel?: string;
 }
@@ -68,6 +111,9 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
     const [modalVisible, setModalVisible] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [expandedRows, setExpandedRows] = useState<(string | number)[]>([]);
+    const [inventoryProductsCache, setInventoryProductsCache] = useState<Record<number, InventoryProduct[]>>({});
+    const [selectedInventoryProducts, setSelectedInventoryProducts] = useState<Set<number>>(new Set());
+    const [productPrices, setProductPrices] = useState<Record<number, string>>({}); // Store product prices by productId
 
     // Fetch products from API
     const fetchProducts = useCallback(async () => {
@@ -83,6 +129,12 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
             // response.data is the CompactProductResponse
             if (response.data?.success && response.data?.data) {
                 setProducts(response.data.data);
+                // Cache product prices
+                const prices: Record<number, string> = {};
+                response.data.data.forEach(product => {
+                    prices[product.id] = product.singleUnitPrice || '0.00';
+                });
+                setProductPrices(prices);
             } else {
                 console.error('Failed to fetch products:', response.data?.message);
                 setProducts([]);
@@ -95,12 +147,57 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
 
     const { loading, error, run } = useAsyncLoader(fetchProducts);
 
+    // Fetch inventory products for a specific product
+    const fetchInventoryProducts = useCallback(async (productId: number) => {
+        try {
+            const response = await services.getApiClient().get<{
+                success: boolean;
+                message: string;
+                data: InventoryProduct[];
+            }>(
+                '/api/inventoryProduct',
+                {
+                    params: {
+                        productId: productId,
+                        status: 'IN_INVENTORY',
+                    },
+                }
+            );
+
+            if (response.data?.success && response.data?.data) {
+                setInventoryProductsCache(prev => ({
+                    ...prev,
+                    [productId]: response.data.data,
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching inventory products:', error);
+        }
+    }, []);
+
     // Fetch products when modal opens
     React.useEffect(() => {
         if (modalVisible) {
             run();
         }
     }, [modalVisible, run]);
+
+    // Handle expanded rows changes
+    const handleExpandedRowsChange = useCallback((rows: (string | number)[]) => {
+        setExpandedRows(rows);
+
+        // Find newly expanded rows
+        const newlyExpanded = rows.filter(rowId => !expandedRows.includes(rowId));
+
+        // Fetch inventory products for newly expanded rows
+        newlyExpanded.forEach(rowId => {
+            const productId = Number(rowId);
+            // Only fetch if not already in cache
+            if (!inventoryProductsCache[productId]) {
+                fetchInventoryProducts(productId);
+            }
+        });
+    }, [expandedRows, inventoryProductsCache, fetchInventoryProducts]);
 
     // Product table columns
     const productColumns: Column<Product>[] = useMemo(
@@ -109,43 +206,30 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                 id: 'name',
                 label: 'Product Name',
                 accessorKey: 'name',
-                width: '25%',
                 sortable: true,
             },
             {
-                id: 'alternativeName',
-                label: 'Alternative Name',
-                accessorKey: 'alternativeName',
-                width: '25%',
-                sortable: true,
-            },
-            {
-                id: 'origin',
-                label: 'Origin',
-                accessorKey: 'origin.name',
-                width: '15%',
-                sortable: true,
-            },
-            {
-                id: 'uom',
-                label: 'UOM',
-                accessorKey: 'uom.name',
-                width: '10%',
+                id: 'category',
+                label: 'Category',
+                minWidth: 120,
+                render: (_value: any, row: any) => (
+                    <Text>
+                        {row.isSlabType ? 'Slab' : 'Generic'}
+                    </Text>
+                )
             },
             {
                 id: 'totalAvailableQuantity',
                 label: 'Available Qty',
                 accessorKey: 'totalAvailableQuantity',
-                width: '15%',
-                align: 'right',
+                // align: 'right',
                 type: 'number',
             },
             {
                 id: 'totalAvailableUnits',
                 label: 'Available Units',
                 accessorKey: 'totalAvailableUnits',
-                width: '10%',
-                align: 'right',
+                // align: 'right',
                 type: 'number',
             },
         ],
@@ -155,100 +239,57 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
     // Inventory Product table columns
     const inventoryProductColumns: Column<InventoryProduct>[] = useMemo(
         () => [
-            {
-                id: 'id',
-                label: 'ID',
-                accessorKey: 'id',
-                width: '15%',
-                type: 'number',
-            },
-            {
-                id: 'slabLength',
-                label: 'Length',
-                accessorKey: 'slab.receivingLength',
-                width: '15%',
-                type: 'number',
-                render: (value, row) => (
-                    <Text fontSize={tokens.size[3.5].val} color={theme.textPrimary?.val}>
-                        {row.slab?.receivingLength || '-'}
-                    </Text>
-                ),
-            },
-            {
-                id: 'slabWidth',
-                label: 'Width',
-                accessorKey: 'slab.receivingWidth',
-                width: '15%',
-                type: 'number',
-                render: (value, row) => (
-                    <Text fontSize={tokens.size[3.5].val} color={theme.textPrimary?.val}>
-                        {row.slab?.receivingWidth || '-'}
-                    </Text>
-                ),
-            },
-            {
-                id: 'hold',
-                label: 'Hold',
-                accessorKey: 'hold',
-                width: '20%',
-                render: (value) => (
-                    <Text
-                        fontSize={tokens.size[3.5].val}
-                        color={value ? theme.statusWarning?.val : theme.textSecondary?.val}
-                    >
-                        {value || 'No'}
-                    </Text>
-                ),
-            },
-            {
-                id: 'isSlabType',
-                label: 'Slab Type',
-                accessorKey: 'isSlabType',
-                width: '15%',
-                type: 'boolean',
-                render: (value) => (
-                    <Text fontSize={tokens.size[3.5].val} color={theme.textPrimary?.val}>
-                        {value ? 'Yes' : 'No'}
-                    </Text>
-                ),
-            },
+            { id: 'combinedNumber', label: 'Serial No', render: (_value, row) => row.combinedNumber },
+            { id: 'barcode', label: 'Barcode', render: (_value, row) => row.slab?.barcode || row.genericProduct?.barcode },
+            { id: 'blockBundle', label: 'Block-Bundle', render: (_value, row) => `${row?.slab?.block}-${row?.slab?.lot}` },
+            { id: 'slabNumber', label: 'Slab No', render: (_value, row) => row.slab?.slabNumber },
+            { id: 'location', label: 'Location(Bin)', render: (_value, row) => row?.bin?.name },
+            { id: 'qty', label: 'Qty(SF)', render: (_value, row) => `${row?.slab?.receivingLength}*${row?.slab?.receivingWidth}=${(row?.slab?.receivingLength * row?.slab?.receivingWidth / 144).toFixed(2)}SF` },
+
         ],
         [tokens, theme]
     );
 
-    // Product row actions
-    const productRowActions: RowAction<Product>[] = useMemo(
-        () => [
-            {
-                id: 'select',
-                label: 'Select Product',
-                icon: <Package size={16} color={theme.primary?.val} />,
-                onClick: (row) => {
-                    if (onProductsSelected) {
-                        onProductsSelected([row]);
-                    }
-                    setModalVisible(false);
-                },
-            },
-        ],
-        [onProductsSelected, theme]
-    );
+    const handleConfirmSelection = () => {
+        if (onProductsSelected && selectedInventoryProducts.size > 0) {
+            const selectedProducts: SelectedInventoryProduct[] = [];
 
-    // Inventory product row actions
-    const inventoryProductRowActions: RowAction<InventoryProduct>[] = useMemo(
-        () => [
-            {
-                id: 'select',
-                label: 'Select Inventory',
-                icon: <Package size={16} color={theme.primary?.val} />,
-                onClick: (row) => {
-                    console.log('Selected inventory product:', row);
-                    // You can add logic here to select individual inventory products
-                },
-            },
-        ],
-        [theme]
-    );
+            selectedInventoryProducts.forEach(inventoryProductId => {
+                // Find the product that contains this inventory product
+                let productId: number | null = null;
+                for (const [pid, invProducts] of Object.entries(inventoryProductsCache)) {
+                    if (invProducts.some(ip => ip.id === inventoryProductId)) {
+                        productId = Number(pid);
+                        break;
+                    }
+                }
+
+                if (productId && productPrices[productId]) {
+                    selectedProducts.push({
+                        inventoryProductId,
+                        unitPrice: productPrices[productId],
+                        taxApplied: true,
+                    });
+                }
+            });
+
+            onProductsSelected(selectedProducts);
+        }
+        setModalVisible(false);
+        setSelectedInventoryProducts(new Set());
+    };
+
+    const handleToggleInventoryProduct = (inventoryProductId: number) => {
+        setSelectedInventoryProducts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(inventoryProductId)) {
+                newSet.delete(inventoryProductId);
+            } else {
+                newSet.add(inventoryProductId);
+            }
+            return newSet;
+        });
+    };
 
     return (
         <>
@@ -259,54 +300,78 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                 icon={<Plus size={20} />}
             />
 
-            {/* <AppDialog
+            <AppDialog
                 open={modalVisible}
                 onOpenChange={setModalVisible}
                 title="Select Products"
                 maxWidth="95%"
                 maxHeight="90%"
-            > */}
-            <YStack minHeight={400}>
-                <MobileTable
-                    columns={productColumns as Column<Record<string, any>>[]}
-                    data={products as Record<string, any>[]}
-                    loading={loading}
-                    rowActions={productRowActions as RowAction<Record<string, any>>[]}
-                    clickable={true}
-                    onRowClick={(row: Record<string, any>) => {
-                        console.log('Product clicked:', row);
-                    }}
-                    emptyMessage="No products available"
-                    isChild={false}
-                    expandableRows={{
-                        expandedRows: expandedRows,
-                        onExpandedRowsChange: (rows: (string | number)[]) => {
-                            setExpandedRows(rows);
-                        },
-                        renderExpandedContent: (row: Record<string, any>) => {
-                            const product = row as Product;
-                            const inventoryProducts = product.inventoryProducts || [];
+                footer={
+                    <YStack gap={tokens.space[2].val} alignItems="flex-end">
+                        <Text fontSize={tokens.size[3.5].val} color={theme.textSecondary?.val}>
+                            {selectedInventoryProducts.size} inventory product(s) selected
+                        </Text>
+                        <XStack gap={tokens.space[2].val}>
+                            <Button
+                                title="Cancel"
+                                variant="outline"
+                                onPress={() => setModalVisible(false)}
+                            />
+                            <Button
+                                title="Add Selected"
+                                variant="primary"
+                                onPress={handleConfirmSelection}
+                                disabled={selectedInventoryProducts.size === 0}
+                            />
+                        </XStack>
+                    </YStack>
+                }
+            >
+                <YStack minHeight={400}>
+                    <MobileTable
+                        columns={productColumns as Column<Record<string, any>>[]}
+                        data={products as Record<string, any>[]}
+                        loading={loading}
+                        clickable={true}
+                        onRowClick={(row: Record<string, any>) => {
+                            console.log('Product clicked:', row);
+                        }}
+                        emptyMessage="No products available"
+                        isChild={false}
+                        expandableRows={{
+                            expandedRows: expandedRows,
+                            onExpandedRowsChange: handleExpandedRowsChange,
+                            renderExpandedContent: (row: Record<string, any>) => {
+                                const product = row as Product;
+                                const inventoryProducts = inventoryProductsCache[product.id] || [];
 
-                            return (
-
-                                <MobileTable
-                                    columns={inventoryProductColumns as Column<Record<string, any>>[]}
-                                    data={inventoryProducts as Record<string, any>[]}
-                                    rowActions={inventoryProductRowActions as RowAction<Record<string, any>>[]}
-                                    clickable={true}
-                                    onRowClick={(inventoryProduct: Record<string, any>) => {
-                                        console.log('Inventory product clicked:', inventoryProduct);
-                                    }}
-                                    emptyMessage="No inventory products available"
-                                    isChild={true}
-                                    maxHeight={300}
-                                />
-                            );
-                        },
-                    }}
-                />
-            </YStack>
-            {/* </AppDialog> */}
+                                return (
+                                    <YStack
+                                        gap={tokens.space[2].val}
+                                    >
+                                        <MobileTable
+                                            selectable
+                                            selectedRows={Array.from(selectedInventoryProducts)}
+                                            onSelectionChange={(selected) => {
+                                                setSelectedInventoryProducts(new Set(selected as number[]));
+                                            }}
+                                            columns={inventoryProductColumns as Column<Record<string, any>>[]}
+                                            data={inventoryProducts as Record<string, any>[]}
+                                            clickable={true}
+                                            onRowClick={(inventoryProduct: Record<string, any>) => {
+                                                handleToggleInventoryProduct(inventoryProduct.id);
+                                            }}
+                                            emptyMessage="No inventory products available"
+                                            isChild={true}
+                                            maxHeight={300}
+                                        />
+                                    </YStack>
+                                );
+                            },
+                        }}
+                    />
+                </YStack>
+            </AppDialog>
         </>
     );
 };

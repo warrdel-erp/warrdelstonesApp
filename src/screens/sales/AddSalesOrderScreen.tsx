@@ -1,53 +1,112 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { ScrollView, View } from 'react-native';
-import { YStack, getTokens, useTheme } from 'tamagui';
-import { AddProductsToSO } from '../../components/sales/AddProductsToSO';
+import { Text, YStack, getTokens, useTheme } from 'tamagui';
+import { z } from 'zod';
+import { AddProductsToSO, SelectedInventoryProduct } from '../../components/sales/AddProductsToSO';
 import Button from '../../components/ui/Button';
 import FormRenderer, { FormSectionConfig } from '../../components/ui/FormRenderer';
-import { showErrorToast } from '../../utils';
+import { services } from '../../network';
+import { showErrorToast, showSuccessToast } from '../../utils';
 
-interface SalesOrderFormData {
-    customer: number;
-    deliveryLocation: number;
-    soLocation: number;
-    printedNotes: string;
-    internalNotes: string;
-    soDate: Date;
+const salesOrderSchema = z.object({
+    customer: z.number({ message: 'Customer is required' }).min(1, 'Customer is required'),
+    deliveryLocation: z.number({ message: 'Delivery Location is required' }).min(1, 'Delivery Location is required'),
+    soLocation: z.number({ message: 'SO Location is required' }).min(1, 'SO Location is required'),
+    printedNotes: z.string().optional(),
+    internalNotes: z.string().optional(),
+    soDate: z.date({ message: 'SO Date is required' }),
+    customerPo: z.string().optional(),
+    customerPoDate: z.date({ message: 'Customer PO Date is required' }),
+    expDelivery: z.date({ message: 'Expected Delivery Date is required' }),
+    paymentTerms: z.number().optional(),
+});
+
+type SalesOrderFormData = z.infer<typeof salesOrderSchema>;
+
+interface SalesOrderPayload {
+    soDate: string;
     customerPo: string;
-    customerPoDate: Date;
-    expDelivery: Date;
+    customerPoDate: string;
+    expDeliveryDate: string;
+    soLocationId: number;
+    customerId: number;
+    deliveryNotes: string;
+    internalNotes: string;
+    shippingAddressId: number;
     paymentTerms: number;
+    deliveryType: string;
+    products: SelectedInventoryProduct[];
 }
 
 export const AddSalesOrderScreen: React.FC = () => {
     const tokens = getTokens();
     const theme = useTheme();
+    const [selectedProducts, setSelectedProducts] = React.useState<SelectedInventoryProduct[]>([]);
+
     const form = useForm<SalesOrderFormData>({
+        resolver: zodResolver(salesOrderSchema),
         defaultValues: {
-            customer: undefined,
-            deliveryLocation: undefined,
-            soLocation: undefined,
+            customer: undefined as any,
+            deliveryLocation: undefined as any,
+            soLocation: undefined as any,
             printedNotes: '',
             internalNotes: '',
-            soDate: undefined,
+            soDate: undefined as any,
             customerPo: '',
-            customerPoDate: undefined,
-            expDelivery: undefined,
+            customerPoDate: undefined as any,
+            expDelivery: undefined as any,
             paymentTerms: undefined,
         },
     });
 
     const watchedCustomerId = form.watch('customer');
 
-    const onSubmit = async (data: SalesOrderFormData) => {
+    const onSubmit = async (data: any) => {
         try {
-            console.log('Form data:', data);
-            // TODO: Implement API call to create sales order
-            // await services.sales.createSalesOrder(data);
-            // showErrorToast('Sales order created successfully');
-        } catch (error) {
-            showErrorToast('Failed to create sales order');
+            if (selectedProducts.length === 0) {
+                showErrorToast('Please add at least one product');
+                return;
+            }
+
+            const formatDate = (date: Date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            const payload: SalesOrderPayload = {
+                soDate: formatDate(data.soDate),
+                customerPo: data.customerPo || '',
+                customerPoDate: formatDate(data.customerPoDate),
+                expDeliveryDate: formatDate(data.expDelivery),
+                soLocationId: data.soLocation,
+                customerId: data.customer,
+                deliveryNotes: data.printedNotes || '',
+                internalNotes: data.internalNotes || '',
+                shippingAddressId: data.deliveryLocation,
+                paymentTerms: data.paymentTerms || 0,
+                deliveryType: 'delivery',
+                products: selectedProducts,
+            };
+
+            console.log('Submitting Sales Order:', payload);
+
+            const response = await services.getApiClient().post('/api/salesOrder', payload);
+
+            if (response.data?.success) {
+                showSuccessToast('Sales order created successfully');
+                // Reset form and products
+                form.reset();
+                setSelectedProducts([]);
+            } else {
+                showErrorToast(response.data?.message || 'Failed to create sales order');
+            }
+        } catch (error: any) {
+            console.error('Error creating sales order:', error);
+            showErrorToast(error?.message || 'Failed to create sales order');
         }
     };
 
@@ -170,12 +229,28 @@ export const AddSalesOrderScreen: React.FC = () => {
                     <FormRenderer sections={formSections} form={form} />
 
                     <AddProductsToSO
-                        buttonLabel="Add Products"
+                        buttonLabel={`Add Products ${selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''}`}
                         onProductsSelected={(products) => {
-                            console.log('Selected products:', products);
-                            // TODO: Handle selected products
+                            setSelectedProducts(prev => [...prev, ...products]);
+                            showSuccessToast(`Added ${products.length} product(s) to order`);
                         }}
                     />
+
+                    {selectedProducts.length > 0 && (
+                        <YStack
+                            padding={tokens.space[3].val}
+                            backgroundColor={theme.backgroundHover?.val}
+                            borderRadius={tokens.radius[3].val}
+                        >
+                            <Text
+                                fontSize={tokens.size[4].val}
+                                fontWeight="600"
+                                color={theme.textPrimary?.val}
+                            >
+                                {selectedProducts.length} product(s) added to order
+                            </Text>
+                        </YStack>
+                    )}
 
                     <Button
                         title="Create Sales Order"

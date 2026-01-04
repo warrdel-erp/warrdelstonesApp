@@ -37,6 +37,9 @@ export interface SelectDropdownProps<T = any> {
     placeholder?: string;
     /** Disabled state */
     disabled?: boolean;
+    /** Error state */
+    error?: boolean;
+    hasError?: boolean;
 }
 
 
@@ -49,11 +52,14 @@ export const SelectDropdown = <T,>({
     multiSelect = false,
     disabled = false,
     placeholder = 'Select an option',
+    error = false,
+    hasError = false,
 }: SelectDropdownProps<T>) => {
     const tokens = getTokens();
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
     const [fetchedOptions, setFetchedOptions] = React.useState<DropdownOption<T>[]>([]);
+    const showError = error || hasError;
 
     // Fetch options from API if endpoint is provided
     const fetchOptions = React.useCallback(async () => {
@@ -87,7 +93,7 @@ export const SelectDropdown = <T,>({
         }
     }, [endpoint, queryParams]);
 
-    const { loading, error, run } = useAsyncLoader(fetchOptions);
+    const { loading, error: apiError, run } = useAsyncLoader(fetchOptions);
 
     // Fetch options on mount or when endpoint/queryParams change
     React.useEffect(() => {
@@ -179,7 +185,7 @@ export const SelectDropdown = <T,>({
                 width="100%"
                 borderWidth={1}
                 borderRadius={tokens.radius[3].val}
-                borderColor={theme.borderMedium?.val || '#E5E7EB'}
+                borderColor={showError ? theme.statusError?.val || '#DC2626' : theme.borderMedium?.val || '#E5E7EB'}
                 backgroundColor={disabled ? theme.backgroundHover?.val || '#F9FAFB' : theme.background?.val || '#FFFFFF'}
                 paddingHorizontal={tokens.space[3].val}
                 paddingVertical={tokens.space[2].val}
@@ -291,7 +297,7 @@ export const SelectDropdown = <T,>({
                                                 fontSize={tokens.size[3.5].val}
                                                 color={theme.statusError?.val || '#DC2626'}
                                             >
-                                                {error?.message || 'Failed to load options'}
+                                                {apiError?.message || 'Failed to load options'}
                                             </Text>
                                         </YStack>
                                     ) : options.length === 0 ? (
