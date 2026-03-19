@@ -1,3 +1,2 @@
-2. tabs to using tamagui.
-3. create custom inputs with label and errors
-4. form renderer.
+1. tabs to using tamagui.
+2. don't show create PL option if PL has been created for LO

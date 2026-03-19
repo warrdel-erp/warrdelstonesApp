@@ -130,6 +130,7 @@ android {
         versionCode getApplicationVersionCode()
         versionName getApplicationVersion()
         resValue "string", "build_config_package", getAndroidPacakge()
+        resValue "string", "google_maps_api_key", project.env.get("GOOGLE_MAPS_API_KEY")
     }
 
     flavorDimensions "environment"

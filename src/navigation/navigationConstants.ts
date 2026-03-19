@@ -1,4 +1,5 @@
 import React from 'react';
+import { TempScreen } from '../screens/TempScreen.tsx';
 import { UserRole, UserRoleValue } from '../types/userTypes';
 import { AccountPayableNavigator } from './stacks/accounting/AccountPayableNavigator.tsx';
 import { AccountReceivableNavigator } from './stacks/accounting/AccountReceivableNavigator.tsx';
@@ -38,6 +39,7 @@ export const StackId = {
   INVOICES: 'InvoicesStack',
   DELIVERIES: 'DeliveriesStack',
   RETURNS: 'ReturnsStack',
+  SELECTION_SHEET: 'SelectionSheetStack',
   BATCH_INVOICING: 'BatchInvoicingStack',
   EXPENSES: 'ExpensesStack',
   PURCHASES: 'PurchasesStack',
@@ -77,6 +79,11 @@ export const ScreenId = {
   SALES_ORDER_LIST: 'SalesList',
   ADD_SALES_ORDER: 'AddSalesOrder',
   SALES_ORDER_DETAIL: 'SalesOrderDetail',
+  ADD_LOADING_ORDER: 'AddLoadingOrder',
+  LOADING_ORDER_DETAIL: 'LoadingOrderDetail',
+  ADD_PACKAGING_LIST: 'AddPackagingList',
+  PACKAGING_LIST_DETAIL: 'PackagingListDetail',
+  INVOICE_DETAIL: 'InvoiceDetail',
   INVOICES_LIST: 'InvoicesList',
   DELIVERIES_LIST: 'DeliveriesList',
   RETURNS_LIST: 'ReturnsList',
@@ -210,22 +217,29 @@ export const SALES_NAVIGATORS: DrawerMenuItem[] = [
   {
     id: StackId.INVOICES,
     title: 'Invoices',
-    icon: 'people',
+    icon: 'description',
     component: InvoicesNavigator,
     roles: ALL_ROLES,
   },
   {
     id: StackId.DELIVERIES,
     title: 'Deliveries',
-    icon: 'people',
+    icon: 'local-shipping',
     component: DeliveriesNavigator,
     roles: ALL_ROLES,
   },
   {
     id: StackId.RETURNS,
     title: 'Returns',
-    icon: 'people',
+    icon: 'assignment-return',
     component: ReturnsNavigator,
+    roles: ALL_ROLES,
+  },
+  {
+    id: StackId.SELECTION_SHEET,
+    title: 'Selection Sheet',
+    icon: 'assignment',
+    component: TempScreen,
     roles: ALL_ROLES,
   },
 ];

@@ -16,7 +16,9 @@ end
 
 target 'StoneApp' do
   config = use_native_modules!
-
+  pod 'react-native-config', :path => '../node_modules/react-native-config', :modular_headers => true
+  pod 'GoogleMaps'
+  
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

@@ -1,9 +1,8 @@
-import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ALL_ROLES, ScreenId, ScreenItem } from '../../navigationConstants.ts';
+import React from 'react';
+import { DeliveriesScreen } from '../../../screens/sales/DeliveriesScreen.tsx';
 import { createHeaderComponent } from '../../headerFactory.tsx';
-import ProfileScreen from '../../../screens/profile/ProfileScreen.tsx';
-import { TempScreen } from '../../../screens/TempScreen.tsx';
+import { ALL_ROLES, ScreenId, ScreenItem } from '../../navigationConstants.ts';
 
 const Stack = createStackNavigator();
 
@@ -12,7 +11,7 @@ export const DELIVERIES_SCREENS: ScreenItem[] = [
     id: ScreenId.DELIVERIES_LIST,
     title: 'All Deliveries',
     parentStack: 'Deliveries',
-    component: TempScreen,
+    component: DeliveriesScreen,
     roles: ALL_ROLES,
     isRoot: true,
   },

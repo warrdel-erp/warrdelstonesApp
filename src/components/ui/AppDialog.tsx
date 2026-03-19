@@ -119,7 +119,7 @@ export const AppDialog: React.FC<AppDialogProps> = ({
                     backgroundColor={theme.background?.val}
                     borderRadius={tokens.radius[4].val}
                 >
-                    <YStack gap={tokens.space[3].val}>
+                    <YStack gap={tokens.space[3].val} padding={tokens.space[4].val}>
                         {renderHeader()}
                         <ScrollView
                             style={{ maxHeight: 500 }}

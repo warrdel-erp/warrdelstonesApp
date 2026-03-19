@@ -6,6 +6,7 @@ export { Badge } from './Badge';
 export { default as Button } from './Button';
 export { default as Card } from './Card';
 export { CheckBox } from './CheckBox';
+export { default as ConfirmationDialog } from './ConfirmationDialog';
 export { default as Container } from './Container';
 export { default as DatePicker } from './DatePicker';
 export { default as Dropdown } from './Dropdown';

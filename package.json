@@ -58,6 +58,8 @@
     "react-native-gesture-handler": "^2.27.2",
     "react-native-google-places-sdk": "^0.3.1",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
+    "react-native-maps": "^1.26.20",
+    "react-native-maps-directions": "^1.9.0",
     "react-native-pager-view": "^6.9.1",
     "react-native-reanimated": "^4.0.1",
     "react-native-safe-area-context": "^5.5.2",

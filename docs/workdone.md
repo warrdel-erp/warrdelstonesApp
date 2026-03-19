@@ -26,3 +26,17 @@
 1. form validations.
 2. successful creation of SO from app. (but not as much featured as web).
 3. working on SO details page.
+
+---
+
+1. More details of LO in SO details page.
+2. create LO.
+3. Create PL.
+4. Create LO Invoice.
+5. form renderer.
+6. create custom inputs with label and errors
+
+---
+
+1. deliveries all tabs.
+2. initiate delivery.

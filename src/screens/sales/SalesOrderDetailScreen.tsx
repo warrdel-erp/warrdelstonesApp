@@ -8,14 +8,14 @@ import FinancialSummary from '../../components/sales/FinancialSummary';
 import LoadingOrdersTable from '../../components/sales/LoadingOrdersTable';
 import NotesSection from '../../components/sales/NotesSection';
 import ProductsTable, { InventoryItem, ProductRow } from '../../components/sales/ProductsTable';
-import { Badge, Button, Heading } from '../../components/ui';
+import { Badge, Button, ConfirmationDialog, Heading } from '../../components/ui';
 import BaseScreen from '../../components/ui/BaseScreen';
 import CardWithHeader from '../../components/ui/CardWithHeader';
 import DetailGridRenderer from '../../components/ui/DetailGridRenderer';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator';
 import { services } from '../../network';
 import { ScreenProps } from '../../types/NavigationTypes';
-import { showErrorToast } from '../../utils';
+import { showErrorToast, showSuccessToast } from '../../utils';
 
 export interface SalesOrderDetailResponse {
     success: boolean;
@@ -151,6 +151,8 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
     const salesOrderId = props.route.params?.salesOrderId;
     const [salesOrderDetail, setSalesOrderDetail] = React.useState<SalesOrderDetail | null>(null);
     const [loading, setLoading] = React.useState<boolean>(false);
+    const [confirmationDialogOpen, setConfirmationDialogOpen] = React.useState<boolean>(false);
+    const [selectedLoadingOrderId, setSelectedLoadingOrderId] = React.useState<number | null>(null);
     const tokens = getTokens();
     const theme = useTheme();
 
@@ -176,6 +178,28 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
             showErrorToast('Failed to fetch sales order details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCreateInvoice = (loadingOrderId: number) => {
+        setSelectedLoadingOrderId(loadingOrderId);
+        setConfirmationDialogOpen(true);
+    };
+
+    const handleConfirmCreateInvoice = async () => {
+        if (!selectedLoadingOrderId) return;
+
+        try {
+            const response = await services.sales.createInvoiceFromLoadingOrder(selectedLoadingOrderId);
+            if (response.success) {
+                showSuccessToast('Invoice created successfully');
+                // Refresh the sales order detail to get updated data
+                await getSalesOrderDetail();
+            } else {
+                showErrorToast(response.error?.message?.[0] ?? 'Failed to create invoice');
+            }
+        } catch (error) {
+            showErrorToast('Failed to create invoice');
         }
     };
 
@@ -212,7 +236,7 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
             barcode: sop.inventoryProduct.slab.barcode,
             blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
             slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-            location: sop.inventoryProduct.bin.name,
+            location: sop.inventoryProduct.bin?.name,
             qtySf: `${sop.inventoryProduct.slab.receivingLength}*${sop.inventoryProduct.slab.receivingWidth}=${sop.receivingAreaSqFt.toFixed(2)}SF`,
             subTrx: '-',
             productId: product.id,
@@ -236,13 +260,177 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
     const calculations = salesOrderDetail.calculations?.final;
     const due = calculations?.total - salesOrderDetail.totalAdvancedDeposit;
 
+    // Prepare data structures outside of JSX
+    const loadingOrdersRows = (salesOrderDetail.loadingOrders || []).map((lo: any) => ({
+        id: lo.id,
+        code: lo.code,
+        date: lo.date || lo.createdAt,
+        stage: lo.stage,
+        finalTotal: lo.calculations?.final?.total || 0,
+        totalProfit: lo?.calculations?.final?.total - lo?.calculations?.receiving?.total || 0,
+        status: lo.status || lo.fulFilled || 0,
+        packagingList: lo.packagingList || null,
+        invoice: lo.salesOrderInvoice?.invoiceCode
+            ? { code: lo.salesOrderInvoice.invoiceCode, id: lo.salesOrderInvoice.id }
+            : null,
+        loDate: lo.loDate
+    }));
+
+    const customerDetailItems = [
+        {
+            label: 'Name',
+            value: salesOrderDetail?.customer?.contactName || '-',
+            icon: <User size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+        {
+            label: 'Phone',
+            value: salesOrderDetail?.customer?.primaryPhoneNumber || '-',
+            icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+        {
+            label: 'Email',
+            value: salesOrderDetail?.customer?.email || '-',
+            icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+    ];
+
+    const shippingAddressDetailItems = [
+        {
+            label: 'Address',
+            value: salesOrderDetail?.shippingAddress?.address || '-',
+            icon: <MapPin size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+            width: '100%',
+            wrapText: true,
+        },
+        {
+            label: 'Name',
+            value: salesOrderDetail?.shippingAddress?.contactName || '-',
+            icon: <User size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+        {
+            label: 'Phone',
+            value: salesOrderDetail?.shippingAddress?.contactNumber || '-',
+            icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+        {
+            label: 'Email',
+            value: salesOrderDetail?.shippingAddress?.contactEmail || '-',
+            icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+    ];
+
+    const soLocationDetailItems = [
+        {
+            label: 'Location',
+            value: salesOrderDetail?.soLocation?.location || '-',
+            icon: <Building2 size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+            width: '100%',
+            wrapText: true,
+        },
+        {
+            label: 'Address',
+            value: salesOrderDetail?.soLocation?.address || '-',
+            icon: <MapPin size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+            width: '100%',
+            wrapText: true,
+        },
+        {
+            label: 'Name',
+            value: salesOrderDetail?.soLocation?.contactName || '-',
+            icon: <User size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+        {
+            label: 'Phone',
+            value: salesOrderDetail?.soLocation?.contactNumber || '-',
+            icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+        {
+            label: 'Email',
+            value: salesOrderDetail?.soLocation?.contactMail || '-',
+            icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+    ];
+
+    const orderInformationItems = [
+        {
+            label: 'SO Date',
+            value: moment(salesOrderDetail.soDate).format('MMM DD, YYYY'),
+            width: '47%',
+        },
+        {
+            label: 'Customer PO',
+            value: salesOrderDetail.customerPo || '-',
+            width: '47%',
+        },
+        {
+            label: 'Customer PO Date',
+            value: salesOrderDetail.customerPoDate
+                ? moment(salesOrderDetail.customerPoDate).format('MMM DD, YYYY')
+                : '-',
+            width: '47%',
+        },
+        {
+            label: 'Expected Delivery',
+            value: salesOrderDetail.expDeliveryDate
+                ? moment(salesOrderDetail.expDeliveryDate).format('MMM DD, YYYY')
+                : '-',
+            width: '47%',
+        },
+        {
+            label: 'Payment Terms',
+            value: salesOrderDetail?.customer?.paymentTerm
+                ? `${salesOrderDetail?.customer?.paymentTerm?.value} Days`
+                : '- Days',
+            width: '47%',
+        },
+    ];
+
+    const financialSummaryItems = [
+        {
+            label: 'Sub-Total',
+            value: calculations?.subTotal || 0,
+        },
+        {
+            label: 'Taxable',
+            value: calculations?.taxable || 0,
+        },
+        {
+            label: `Tax(${salesOrderDetail.tax?.value || 0}%)`,
+            value: calculations?.tax || 0,
+        },
+        {
+            label: 'Total',
+            value: calculations?.total || 0,
+            bold: true,
+            color: theme.blue8?.val || '#3B82F6',
+            divider: true,
+        },
+        {
+            label: 'Due',
+            value: due || 0,
+            bold: true,
+            color: theme.blue8?.val || '#3B82F6',
+        },
+        {
+            label: 'Advanced Deposit',
+            value: salesOrderDetail.totalAdvancedDeposit || 0,
+            icon: <Info size={16} color={theme.textSecondary?.val || '#6B7280'} />,
+        },
+    ];
+
+    const cardContainerProps = { flex: 1, minWidth: 200 };
+    const actionButtonsContainerStyle = {
+        gap: tokens.space[3].val,
+        backgroundColor: theme.backgroundSecondary?.val || '#F9FAFB',
+    };
+    const scrollViewContentStyle = {
+        padding: tokens.space[5].val,
+        paddingBottom: tokens.space[8].val,
+    };
+
     return (
         <BaseScreen scrollable={true} keyboardAware={false} backgroundColor={theme.backgroundSecondary?.val}>
-            <ScrollView
-                contentContainerStyle={{
-                    padding: tokens.space[5].val,
-                    paddingBottom: tokens.space[8].val,
-                }}>
+            <ScrollView contentContainerStyle={scrollViewContentStyle}>
                 {/* Sales Order Details Section */}
                 <YStack gap={tokens.space[1].val}>
                     <XStack
@@ -268,103 +456,27 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
                             title="CUSTOMER"
                             variant="highlighted"
                             color="blue"
-                            containerProps={{ flex: 1, minWidth: 200 }}
-
+                            containerProps={cardContainerProps}
                         >
-                            <DetailGridRenderer
-                                items={[
-                                    {
-                                        label: 'Name',
-                                        value: salesOrderDetail?.customer?.contactName || '-',
-                                        icon: <User size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                    {
-                                        label: 'Phone',
-                                        value: salesOrderDetail?.customer?.primaryPhoneNumber || '-',
-                                        icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                    {
-                                        label: 'Email',
-                                        value: salesOrderDetail?.customer?.email || '-',
-                                        icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                ]}
-                            />
+                            <DetailGridRenderer items={customerDetailItems} />
                         </CardWithHeader>
 
                         <CardWithHeader
                             title="SHIPPING ADDRESS"
                             variant="highlighted"
                             color="green"
-                            containerProps={{ flex: 1, minWidth: 200 }}
+                            containerProps={cardContainerProps}
                         >
-                            <DetailGridRenderer
-                                items={[
-                                    {
-                                        label: 'Address',
-                                        value: salesOrderDetail?.shippingAddress?.address || '-',
-                                        icon: <MapPin size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                        width: '100%',
-                                        wrapText: true,
-                                    },
-                                    {
-                                        label: 'Name',
-                                        value: salesOrderDetail?.shippingAddress?.contactName || '-',
-                                        icon: <User size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                    {
-                                        label: 'Phone',
-                                        value: salesOrderDetail?.shippingAddress?.contactNumber || '-',
-                                        icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                    {
-                                        label: 'Email',
-                                        value: salesOrderDetail?.shippingAddress?.contactEmail || '-',
-                                        icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                ]}
-                            />
+                            <DetailGridRenderer items={shippingAddressDetailItems} />
                         </CardWithHeader>
 
                         <CardWithHeader
                             title="SO LOCATION"
                             variant="highlighted"
                             color="yellow"
-                            containerProps={{ flex: 1, minWidth: 200 }}
+                            containerProps={cardContainerProps}
                         >
-                            <DetailGridRenderer
-                                items={[
-                                    {
-                                        label: 'Location',
-                                        value: salesOrderDetail?.soLocation?.location || '-',
-                                        icon: <Building2 size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                        width: '100%',
-                                        wrapText: true,
-                                    },
-                                    {
-                                        label: 'Address',
-                                        value: salesOrderDetail?.soLocation?.address || '-',
-                                        icon: <MapPin size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                        width: '100%',
-                                        wrapText: true,
-                                    },
-                                    {
-                                        label: 'Name',
-                                        value: salesOrderDetail?.soLocation?.contactName || '-',
-                                        icon: <User size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                    {
-                                        label: 'Phone',
-                                        value: salesOrderDetail?.soLocation?.contactNumber || '-',
-                                        icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                    {
-                                        label: 'Email',
-                                        value: salesOrderDetail?.soLocation?.contactMail || '-',
-                                        icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                                    },
-                                ]}
-                            />
+                            <DetailGridRenderer items={soLocationDetailItems} />
                         </CardWithHeader>
                     </XStack>
 
@@ -373,58 +485,30 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
 
                     {/* Order Information */}
                     <CardWithHeader title="Order Information">
-                        <DetailGridRenderer
-                            items={[
-                                {
-                                    label: 'SO Date',
-                                    value: moment(salesOrderDetail.soDate).format('MMM DD, YYYY'),
-                                    width: '47%',
-                                },
-                                {
-                                    label: 'Customer PO',
-                                    value: salesOrderDetail.customerPo || '-',
-                                    width: '47%',
-                                },
-                                {
-                                    label: 'Customer PO Date',
-                                    value: salesOrderDetail.customerPoDate
-                                        ? moment(salesOrderDetail.customerPoDate).format('MMM DD, YYYY')
-                                        : '-',
-                                    width: '47%',
-                                },
-                                {
-                                    label: 'Expected Delivery',
-                                    value: salesOrderDetail.expDeliveryDate
-                                        ? moment(salesOrderDetail.expDeliveryDate).format('MMM DD, YYYY')
-                                        : '-',
-                                    width: '47%',
-                                },
-                                {
-                                    label: 'Payment Terms',
-                                    value: salesOrderDetail?.customer?.paymentTerm
-                                        ? `${salesOrderDetail?.customer?.paymentTerm?.value} Days`
-                                        : '- Days',
-                                    width: '47%',
-                                },
-                            ]}
-                        />
+                        <DetailGridRenderer items={orderInformationItems} />
                     </CardWithHeader>
                 </YStack>
 
                 {/* Loading Orders Section */}
                 <YStack gap={tokens.space[1].val} marginBottom={tokens.space[4].val}>
                     <LoadingOrdersTable
-                        loadingOrders={(salesOrderDetail.loadingOrders || []).map((lo: any) => ({
-                            id: lo.id,
-                            code: lo.code,
-                            date: lo.date || lo.createdAt,
-                            stage: lo.stage,
-                            finalTotal: lo.finalTotal || lo.calculations?.final?.total || 0,
-                            totalProfit: lo.totalProfit || lo.calculations?.final?.profit || 0,
-                            status: lo.status || lo.fulFilled || 0,
-                            packagingList: lo.packagingList || null,
-                            invoice: lo.invoice || null,
-                        }))}
+                        loadingOrders={loadingOrdersRows}
+                        onAddLoadingOrder={() => {
+                            props.navigation.navigate('AddLoadingOrder', { salesOrderId: salesOrderId });
+                        }}
+                        onCreatePackaging={(loadingOrderId: number) => {
+                            props.navigation.navigate('AddPackagingList', { loadingOrderId: loadingOrderId });
+                        }}
+                        onCreateInvoice={handleCreateInvoice}
+                        onLoadingOrderClick={(loadingOrderId: number) => {
+                            props.navigation.navigate('LoadingOrderDetail', { loadingOrderId });
+                        }}
+                        onPackagingListClick={(packagingListId: number) => {
+                            props.navigation.navigate('PackagingListDetail', { packagingListId });
+                        }}
+                        onInvoiceClick={(loadingOrderId: number) => {
+                            props.navigation.navigate('InvoiceDetail', { loadingOrderId });
+                        }}
                     />
                 </YStack>
 
@@ -437,43 +521,10 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
                 <YStack gap={tokens.space[1].val}>
                     <FinancialSummary
                         title="Financial Summary"
-                        items={[
-                            {
-                                label: 'Sub-Total',
-                                value: calculations?.subTotal || 0,
-                            },
-                            {
-                                label: 'Taxable',
-                                value: calculations?.taxable || 0,
-                            },
-                            {
-                                label: `Tax(${salesOrderDetail.tax?.value || 0}%)`,
-                                value: calculations?.tax || 0,
-                            },
-                            {
-                                label: 'Total',
-                                value: calculations?.total || 0,
-                                bold: true,
-                                color: theme.blue8?.val || '#3B82F6',
-                                divider: true,
-                            },
-                            {
-                                label: 'Due',
-                                value: due || 0,
-                                bold: true,
-                                color: theme.blue8?.val || '#3B82F6',
-                            },
-                            {
-                                label: 'Advanced Deposit',
-                                value: salesOrderDetail.totalAdvancedDeposit || 0,
-                                icon: <Info size={16} color={theme.textSecondary?.val || '#6B7280'} />,
-                            },
-                        ]}
+                        items={financialSummaryItems}
                     />
                     {/* Action Buttons */}
-                    <YStack
-                        gap={tokens.space[3].val}
-                        backgroundColor={theme.backgroundSecondary?.val || '#F9FAFB'}>
+                    <YStack {...actionButtonsContainerStyle}>
                         <Button
                             title="Add Advance Deposit"
                             variant="primary"
@@ -499,6 +550,16 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
                     </YStack>
                 </YStack>
             </ScrollView>
+            <ConfirmationDialog
+                open={confirmationDialogOpen}
+                onOpenChange={setConfirmationDialogOpen}
+                title="Create Invoice"
+                message="Are you sure you want to create an invoice for this loading order?"
+                confirmButtonText="Create"
+                cancelButtonText="Cancel"
+                confirmButtonVariant="primary"
+                onConfirm={handleConfirmCreateInvoice}
+            />
         </BaseScreen>
     );
 };

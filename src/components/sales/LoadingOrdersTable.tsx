@@ -1,14 +1,12 @@
-import { Printer, FileText, Package } from '@tamagui/lucide-icons';
+import { FileText, Package, Printer } from '@tamagui/lucide-icons';
 import React from 'react';
-import { FlatList, ListRenderItemInfo, TouchableOpacity, View } from 'react-native';
-import { getTokens, useTheme, XStack, YStack } from 'tamagui';
-import moment from 'moment';
+import { FlatList, ListRenderItemInfo, View } from 'react-native';
+import { YStack, getTokens, useTheme } from 'tamagui';
 import { BodyText, Button } from '../ui';
-import CardWithHeader from '../ui/CardWithHeader';
+import { ActionMenuItem } from '../ui/ActionMenu';
 import { Badge } from '../ui/Badge';
+import CardWithHeader from '../ui/CardWithHeader';
 import DetailGridRenderer from '../ui/DetailGridRenderer';
-import ActionMenu, { ActionMenuItem } from '../ui/ActionMenu';
-import { MoreVertical } from '@tamagui/lucide-icons';
 import { EmptyList } from '../ui/EmptyList';
 
 export interface LoadingOrderRow {
@@ -17,6 +15,7 @@ export interface LoadingOrderRow {
     date?: string;
     createdAt?: string;
     stage?: string;
+    loDate?: string;
     finalTotal?: number;
     totalProfit?: number;
     status?: number;
@@ -37,6 +36,8 @@ export interface LoadingOrdersTableProps {
     onCreatePackaging?: (loadingOrderId: number) => void;
     onCreateInvoice?: (loadingOrderId: number) => void;
     onLoadingOrderClick?: (loadingOrderId: number) => void;
+    onPackagingListClick?: (packagingListId: number) => void;
+    onInvoiceClick?: (loadingOrderId: number) => void;
 }
 
 const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
@@ -46,6 +47,8 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
     onCreatePackaging,
     onCreateInvoice,
     onLoadingOrderClick,
+    onPackagingListClick,
+    onInvoiceClick,
 }) => {
     const tokens = getTokens();
     const theme = useTheme();
@@ -55,18 +58,44 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
     };
 
     const renderLoadingOrderCard = (item: ListRenderItemInfo<LoadingOrderRow>) => {
+
         const lo = item.item;
-        const dateValue = lo.date || lo.createdAt;
-        const formattedDate = dateValue ? moment(dateValue).format('YYYY-MM-DD') : '-';
-        const profit = lo.totalProfit || 0;
+
+        // const profit = decimalSubtract(Number(row?.calculations?.final?.total), Number(row?.calculations?.receiving?.total))
         const statusPercentage = lo.status || 0;
 
         const actions: ActionMenuItem[] = [
+            {
+                label: 'View',
+                icon: FileText,
+                onPress: () => onLoadingOrderClick?.(lo.id),
+            },
             {
                 label: 'Print',
                 icon: Printer,
                 onPress: () => onPrint?.(lo.id),
             },
+        ];
+
+        // Add conditional actions if PL or Invoice exists
+        if (lo.packagingList) {
+            actions.push({
+                label: 'View PL',
+                icon: Package,
+                onPress: () => onPackagingListClick?.(lo.packagingList!.id),
+            });
+        }
+
+        if (lo.invoice) {
+            actions.push({
+                label: 'View Invoice',
+                icon: FileText,
+                onPress: () => onInvoiceClick?.(lo.id),
+            });
+        }
+
+        // Always add create actions
+        actions.push(
             {
                 label: 'Create Packaging',
                 icon: Package,
@@ -77,26 +106,9 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
                 icon: FileText,
                 onPress: () => onCreateInvoice?.(lo.id),
             },
-        ];
+        );
 
         const detailItems = [
-            {
-                label: 'Date',
-                width: '47%',
-                value: formattedDate,
-            },
-            {
-                label: 'Loading Order',
-                width: '47%',
-                value: (
-                    <Button
-                        title={lo.code || '-'}
-                        variant="outline"
-                        size="small"
-                        onPress={() => onLoadingOrderClick?.(lo.id)}
-                    />
-                ),
-            },
             {
                 label: 'Packaging List',
                 width: '47%',
@@ -108,6 +120,11 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
                 value: lo.invoice?.code || '-',
             },
             {
+                label: 'Date',
+                width: '47%',
+                value: lo.loDate,
+            },
+            {
                 label: 'Stage',
                 width: '47%',
                 value: lo.stage || 'Initiated',
@@ -115,26 +132,22 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
             {
                 label: 'Final Total',
                 width: '47%',
-                value: formatCurrency(lo.finalTotal || 0),
+                value: lo.finalTotal || 0.00,
                 type: 'money' as const,
             },
             {
                 label: 'Total Profit',
                 width: '47%',
-                value: (
-                    <BodyText color={profit < 0 ? theme.red8?.val || '#EF4444' : theme.green8?.val || '#10B981'}>
-                        {profit < 0 ? `-${formatCurrency(Math.abs(profit))}` : formatCurrency(profit)}
-                    </BodyText>
-                ),
+                value: lo.totalProfit || 0.00,
             },
             {
                 label: 'Status',
                 width: '47%',
                 value: (
                     <Badge
-                    
+
                         label={`${statusPercentage}%`}
-                                              
+
                         size="small"
                     />
                 ),
@@ -156,9 +169,9 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
         <CardWithHeader
             title="Invoice / PL / LO"
             customActions={
-                onAddLoadingOrder && (
+                (
                     <Button
-                        title="Add Loading Order"
+                        title="Add LO"
                         variant="outline"
                         size="small"
                         onPress={onAddLoadingOrder}

@@ -1,12 +1,9 @@
-import { BaseService } from '../base/BaseService';
-import { ApiClient } from '../base/ApiClient';
-import { ApiResponse } from '../types/ApiResponseTypes.ts';
-import { DataMapUtils } from '../../utils/DataMapUtils.ts';
-import { ProductResponse } from '../../types/ProductTypes.ts';
-import { VendorsResponse } from '../../types/VendorTypes.ts';
-import { AddVendorForm } from '../../screens/suppliers/AddSupplierScreen.tsx';
 import { CustomersResponse } from '../../types/CustomerTypes.ts';
 import { ServiceOrderResponse } from '../../types/SalesOrderTypes.ts';
+import { DataMapUtils } from '../../utils/DataMapUtils.ts';
+import { ApiClient } from '../base/ApiClient';
+import { BaseService } from '../base/BaseService';
+import { ApiResponse } from '../types/ApiResponseTypes.ts';
 
 export type SalesOrdersFilter = {
   page?: number;
@@ -41,7 +38,9 @@ export type AddTruckPayload = {
 };
 
 export type DeliveryFilter = {
-  status: 'pending' | 'approved';
+  status: 'pending' | 'approved' | 'completed' | 'rejected';
+  page?: number;
+  limit?: number;
 };
 
 export type ReturnFilter = {
@@ -56,6 +55,39 @@ export type TrucksFilter = {
 
 export type ReturnPayload = { invoiceId: number; productIds: number[] };
 export type UpdateReturnPayload = { productIds: number[] };
+
+export type CreateLoadingOrderPayload = {
+  lo?: number;
+  loDate: string;
+  expDeliveryDate: string;
+  deliveryNotes?: string;
+  internalNote?: string;
+  deliveryType: string;
+  shippingAddressId: number;
+  paymentTermId?: number | null;
+  customerId: number;
+  salesOrderId: string;
+  soProducts: Array<{
+    id: string;
+    loRemeasureLength?: number;
+    loRemeasureWidth?: number;
+  }>;
+};
+
+export type CreatePackagingListPayload = {
+  plDate: string;
+  loadingOrderId: string;
+  soProducts: Array<{
+    id: string;
+    plRemeasureLength?: number;
+    plRemeasureWidth?: number;
+  }>;
+};
+
+export type InitiateDeliveryPayload = {
+  loadingOrderIds: number[];
+  truckId: number;
+};
 
 export class SalesOrderService extends BaseService {
   constructor(apiClient: ApiClient) {
@@ -132,5 +164,66 @@ export class SalesOrderService extends BaseService {
     return this.makeRequest(() =>
       this.apiClient.get(`/api/loadingOrder/accordingToReturnConfirmation/${invoiceId}`),
     );
+  }
+
+  async getSalesOrderForCreateLO(salesOrderId: number): Promise<ApiResponse<CustomersResponse>> {
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/salesOrder/${salesOrderId}/forCreateLO`),
+    );
+  }
+
+  async createLoadingOrder(
+    payload: CreateLoadingOrderPayload,
+  ): Promise<ApiResponse<CustomersResponse>> {
+    return this.makeRequest(() => this.apiClient.post(`/api/loadingOrder`, payload));
+  }
+
+  async createPackagingList(
+    payload: CreatePackagingListPayload,
+  ): Promise<ApiResponse<CustomersResponse>> {
+    return this.makeRequest(() => this.apiClient.post(`/api/packagingList`, payload));
+  }
+
+  async createInvoiceFromLoadingOrder(
+    loadingOrderId: number,
+  ): Promise<ApiResponse<CustomersResponse>> {
+    return this.makeRequest(() =>
+      this.apiClient.put(`/api/loadingOrder/${loadingOrderId}/createInvoice`),
+    );
+  }
+
+  async packagingList(id: number): Promise<ApiResponse<CustomersResponse>> {
+    return this.makeRequest(() => this.apiClient.get(`/api/packagingList/${id}`));
+  }
+
+  async invoice(id: number): Promise<ApiResponse<CustomersResponse>> {
+    return this.makeRequest(() => this.apiClient.get(`/api/invoice/${id}`));
+  }
+
+  async getLoadingOrders(filter: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<ApiResponse<any>> {
+    const params = DataMapUtils.objectToParams(filter);
+    return this.makeRequest(() => this.apiClient.get(`/api/loadingOrder`, { params }));
+  }
+
+  async initiateDelivery(payload: InitiateDeliveryPayload): Promise<ApiResponse<any>> {
+    return this.makeRequest(() => this.apiClient.post(`/api/delivery/initiate`, payload));
+  }
+
+  async approveDelivery(payload: {
+    invoiceDeliveries: Array<{ id: number; order: number }>;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest(() => this.apiClient.post(`/api/delivery/approve`, payload));
+  }
+
+  async rejectDelivery(deliveryId: number): Promise<ApiResponse<any>> {
+    return this.makeRequest(() => this.apiClient.post(`/api/delivery/reject/${deliveryId}`));
+  }
+
+  async completeDelivery(deliveryId: number): Promise<ApiResponse<any>> {
+    return this.makeRequest(() => this.apiClient.post(`/api/delivery/complete/${deliveryId}`));
   }
 }
