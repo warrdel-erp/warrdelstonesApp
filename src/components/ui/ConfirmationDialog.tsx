@@ -99,7 +99,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             maxWidth={400}
         >
             <YStack gap={tokens.space[2].val}>
-                <BodyText color={theme.textPrimary?.val || '#1F2937'}>
+                <BodyText color={theme.textPrimary?.val}>
                     {message}
                 </BodyText>
             </YStack>

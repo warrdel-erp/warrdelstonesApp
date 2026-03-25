@@ -85,4 +85,12 @@ export class InventoryService extends BaseService {
       this.apiClient.put(`/api/inventoryProduct/${productId}/cart`, { isInCart }),
     );
   }
+
+  async getInventoryProductForSwap(productId: number): Promise<ApiResponse<InventoryProductsResponse>> {
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/inventoryProduct`, {
+        params: { productId, status: 'IN_INVENTORY' },
+      }),
+    );
+  }
 }

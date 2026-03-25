@@ -1,11 +1,5 @@
-import { BaseService } from '../base/BaseService';
 import { ApiClient } from '../base/ApiClient';
-import {
-  EmployeePermission,
-  ExistingEmail,
-  UserData,
-  UserPermission,
-} from '../../types/AuthTypes.ts';
+import { BaseService } from '../base/BaseService';
 import { ApiResponse } from '../types/ApiResponseTypes.ts';
 
 export interface LoginCredentials {
@@ -98,6 +92,16 @@ export class AuthService extends BaseService {
       this.apiClient.get(`/api/user/${userId}`, {
         headers: {
           Authorization: undefined,
+        },
+      }),
+    );
+  }
+
+  async me(token: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(() =>
+      this.apiClient.get('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
       }),
     );

@@ -172,8 +172,18 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                 setDeliveryNotes(apiData.deliveryNotes || '');
                 setInternalNote('');
 
-                // Initialize empty selection - users will manually select products
-                setSelectedProducts(new Map());
+                // Initialize with all products selected by default
+                const selectionMap = new Map<number, SelectedProduct>();
+                apiData.products.forEach((product: any) => {
+                    product.salesOrderProduct.forEach((sop: any) => {
+                        selectionMap.set(sop.id, {
+                            salesOrderProductId: sop.id,
+                            loRemeasureLength: sop.inventoryProduct.slab.receivingLength,
+                            loRemeasureWidth: sop.inventoryProduct.slab.receivingWidth,
+                        });
+                    });
+                });
+                setSelectedProducts(selectionMap);
             } else {
                 showErrorToast(response.error?.message?.[0] ?? 'Failed to fetch sales order data');
             }
@@ -491,6 +501,7 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                         onProductSelectionChange={handleProductSelectionChange}
                         onRemeasureChange={handleRemeasureChange}
                         taxPercentage={data.tax.value}
+                        onRefresh={fetchData}
                     />
                 </YStack>
 

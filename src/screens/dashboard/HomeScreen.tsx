@@ -1,19 +1,17 @@
 import React, { useEffect } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import BaseScreen from '../../components/ui/BaseScreen.tsx';
-import { Caption, Container, Dropdown, Heading5, Heading6 } from '../../components/ui';
+import { StyleSheet, View } from 'react-native';
 import { AppContextSelector } from '../../components/AppContextSelector.tsx';
+import { Caption, Container, Dropdown, Heading5 } from '../../components/ui';
+import BaseScreen from '../../components/ui/BaseScreen.tsx';
 import { useScreenContext } from '../../context/ScreenContext.tsx';
-import theme from '../../theme';
-import { TopStatsHeader } from './TopStatsHeader.tsx';
-import { chartConfig, data, DATE_FILTERS } from '../ConstantData.ts';
 import { useAppDispatch, useAuthState } from '../../store/hooks.ts';
 import { setDashboardFilter } from '../../store/slices/appSlice.ts';
-import { LineChart } from 'react-native-chart-kit';
-import Card from '../../components/ui/Card.tsx';
-import { RevenueExpenseTrend } from './RevenueExpenseTrend.tsx';
-import { OrderDistributionChart } from './OrderDistributionChart.tsx';
+import theme from '../../theme';
+import { DATE_FILTERS } from '../ConstantData.ts';
 import { InventoryByCategoryChart } from './InventoryByCategoryChart.tsx';
+import { OrderDistributionChart } from './OrderDistributionChart.tsx';
+import { RevenueExpenseTrend } from './RevenueExpenseTrend.tsx';
+import { TopStatsHeader } from './TopStatsHeader.tsx';
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();

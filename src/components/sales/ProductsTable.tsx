@@ -2,7 +2,7 @@ import { Trash2 } from '@tamagui/lucide-icons';
 import React, { useState } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { getTokens, useTheme, XStack, YStack } from 'tamagui';
-import { BodyText, Button } from '../ui';
+import { BodyText, Button, FormSwitch } from '../ui';
 import CardWithHeader from '../ui/CardWithHeader';
 import MobileTable, { Column } from '../ui/MobileTable';
 
@@ -34,12 +34,14 @@ export interface ProductsTableProps {
     products: ProductRow[];
     onAddProduct?: () => void;
     onDeleteItem?: (productId: number, inventoryItemId?: string) => void;
+    onToggleTax?: (productId: number, checked: boolean) => void;
 }
 
 const ProductsTable: React.FC<ProductsTableProps> = ({
     products,
     onAddProduct,
     onDeleteItem,
+    onToggleTax,
 }) => {
     const tokens = getTokens();
     const theme = useTheme();
@@ -94,26 +96,18 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
             label: 'Tax',
             accessorKey: 'tax',
             align: 'center',
-            render: (value) => (
+            render: (value, row: ProductRow) => (
                 <XStack justifyContent="center">
-                    <YStack
-                        backgroundColor={value ? theme.blue8?.val || '#3B82F6' : theme.gray5?.val || '#E5E7EB'}
-                        width={40}
-                        height={24}
-                        borderRadius={12}
-                        justifyContent="center"
-                        alignItems="center">
-                        <YStack
-                            backgroundColor={theme.background?.val || '#FFFFFF'}
-                            width={20}
-                            height={20}
-                            borderRadius={10}
-                            position="absolute"
-                            left={value ? 18 : 2}
-                        />
-                    </YStack>
+                    <FormSwitch
+                        size="$6" // Keeping user's size preference
+                        checked={value}
+                        onCheckedChange={(checked: boolean) => onToggleTax?.(row.id, checked)}
+                        disabled={!onToggleTax}
+                    />
                 </XStack>
             ),
+
+
         },
     ];
 

@@ -40,7 +40,10 @@ export interface SelectDropdownProps<T = any> {
     /** Error state */
     error?: boolean;
     hasError?: boolean;
+    /** Automatically select the first option when options are loaded */
+    selectFirstByDefault?: boolean;
 }
+
 
 
 export const SelectDropdown = <T,>({
@@ -54,7 +57,9 @@ export const SelectDropdown = <T,>({
     placeholder = 'Select an option',
     error = false,
     hasError = false,
+    selectFirstByDefault = false,
 }: SelectDropdownProps<T>) => {
+
     const tokens = getTokens();
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
@@ -104,7 +109,14 @@ export const SelectDropdown = <T,>({
 
     // Use fetched options if endpoint is provided, otherwise use provided options
     const options = endpoint ? fetchedOptions : (providedOptions || []);
-
+ 
+    // Select first option by default if prop is set and no value is selected (only for single select)
+    React.useEffect(() => {
+        if (selectFirstByDefault && options.length > 0 && !value && !multiSelect) {
+            onSelectionChange(options[0].value);
+        }
+    }, [options, selectFirstByDefault, value, multiSelect, onSelectionChange]);
+ 
     // For single select, find the selected option
     const selectedOption = React.useMemo(() => {
         if (!value) return null;

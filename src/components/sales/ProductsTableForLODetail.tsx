@@ -1,8 +1,10 @@
+import { History } from '@tamagui/lucide-icons';
 import React, { useState } from 'react';
 import { getTokens, useTheme, XStack, YStack } from 'tamagui';
-import { BodyText } from '../ui';
+import { BodyText, Button } from '../ui';
 import CardWithHeader from '../ui/CardWithHeader';
 import MobileTable, { Column } from '../ui/MobileTable';
+import SwapHistoryDialog from './SwapHistoryDialog';
 
 export interface ProductForLODetail {
     id: number;
@@ -19,6 +21,7 @@ export interface ProductForLODetail {
         inventoryProduct: {
             id: number;
             combinedNumber: string;
+            isSlabType: boolean;
             bin: {
                 id: number;
                 name: string;
@@ -34,6 +37,7 @@ export interface ProductForLODetail {
                 receivingWidth: number;
             };
         };
+        swapHistories?: any[];
     }>;
     calculations: {
         loadingOrder: {
@@ -72,6 +76,10 @@ interface InventoryItem {
     location: string;
     quantity: string;
     slabRemeasureQty: string;
+    salesOrderProductId: number;
+    historyCount: number;
+    productName: string;
+    productType: string;
 }
 
 const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
@@ -81,6 +89,14 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
     const tokens = getTokens();
     const theme = useTheme();
     const [expandedRows, setExpandedRows] = useState<(string | number)[]>([]);
+
+    const [showHistory, setShowHistory] = useState(false);
+    const [selectedSop, setSelectedSop] = useState<{ id: number, name: string, type: string } | null>(null);
+
+    const handleHistoryClick = (id: number, name: string, type: string) => {
+        setSelectedSop({ id, name, type });
+        setShowHistory(true);
+    };
 
     // Transform products data
     const productRows: ProductRow[] = products.map((product, index) => {
@@ -107,6 +123,10 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
                 location: sop.inventoryProduct.bin.name,
                 quantity: `${sop.inventoryProduct.slab.receivingLength}×${sop.inventoryProduct.slab.receivingWidth} = ${receivingQty.toFixed(2)} SF`,
                 slabRemeasureQty: `${remeasureLength}×${remeasureWidth} = ${remeasureQty.toFixed(2)} SF`,
+                salesOrderProductId: sop.id,
+                historyCount: sop.swapHistories?.length || 0,
+                productName: product.name,
+                productType: sop.inventoryProduct.isSlabType ? 'Slab' : 'Piece',
             };
         });
 
@@ -141,7 +161,7 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
             label: 'Product(SKU)',
             accessorKey: 'productName',
             render: (value) => (
-                <BodyText color={theme.textPrimary?.val || '#1F2937'} style={{ fontWeight: '500' }}>
+                <BodyText color={theme.textPrimary?.val} style={{ fontWeight: '500' }}>
                     {value || '-'}
                 </BodyText>
             ),
@@ -239,7 +259,21 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
             id: 'actions',
             label: 'Actions',
             width: 100,
-            render: () => <BodyText>--</BodyText>,
+            render: (_value, row) => {
+                if (row.historyCount === 0) return <BodyText>--</BodyText>;
+                return (
+                    <XStack gap={tokens.space[2].val}>
+                        <Button
+                            variant="outline"
+                            size="small"
+                            onPress={() => handleHistoryClick(row.salesOrderProductId, row.productName, row.productType)}
+                            icon={<History size={16} color={theme.orange8?.val} />}
+                            title={row.historyCount.toString()}
+                            color={theme.orange8?.val}
+                        />
+                    </XStack>
+                );
+            },
         },
     ];
 
@@ -264,7 +298,7 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
                                 paddingLeft={tokens.space[6].val}
                                 paddingTop={tokens.space[3].val}
                                 borderLeftWidth={2}
-                                borderLeftColor={theme.blue8?.val || '#3B82F6'}
+                                borderLeftColor={theme.blue8?.val}
                                 marginLeft={tokens.space[4].val}>
                                 <MobileTable
                                     columns={inventoryColumns as Column<Record<string, any>>[]}
@@ -277,6 +311,15 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
                     },
                 }}
             />
+            {selectedSop && (
+                <SwapHistoryDialog
+                    open={showHistory}
+                    onOpenChange={setShowHistory}
+                    salesOrderProductId={selectedSop.id}
+                    productName={selectedSop.name}
+                    productType={selectedSop.type}
+                />
+            )}
         </CardWithHeader>
     );
 };

@@ -104,6 +104,7 @@ export interface LoadingOrderDetailData {
             inventoryProduct: {
                 id: number;
                 combinedNumber: string;
+                isSlabType: boolean;
                 bin: {
                     id: number;
                     name: string;
@@ -119,6 +120,7 @@ export interface LoadingOrderDetailData {
                     receivingWidth: number;
                 };
             };
+            swapHistories?: any[];
         }>;
         calculations: {
             loadingOrder: {
@@ -274,8 +276,6 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
         },
     ];
 
-    const cardContainerProps = { flex: 1, minWidth: 300 };
-
     return (
         <BaseScreen scrollable={true} keyboardAware={false} backgroundColor={theme.backgroundSecondary?.val}>
             <ScrollView contentContainerStyle={scrollViewContentStyle}>
@@ -287,7 +287,7 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
                         Loading Order Details
                     </Heading>
                     <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                        Loading Order for SO #{data.salesOrder.clientSoNumber}
+                        {data.code}
                     </BodyText>
                 </YStack>
 

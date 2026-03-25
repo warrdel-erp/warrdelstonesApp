@@ -226,4 +226,21 @@ export class SalesOrderService extends BaseService {
   async completeDelivery(deliveryId: number): Promise<ApiResponse<any>> {
     return this.makeRequest(() => this.apiClient.post(`/api/delivery/complete/${deliveryId}`));
   }
+
+  async swapInventoryProduct(
+    salesOrderProductId: number,
+    newInventoryProductId: number,
+  ): Promise<ApiResponse<any>> {
+    return this.makeRequest(() =>
+      this.apiClient.put(`/api/salesOrderProduct/${salesOrderProductId}/swap`, {
+        newInventoryProductId,
+      }),
+    );
+  }
+
+  async getSwapHistory(salesOrderProductId: number): Promise<ApiResponse<any>> {
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/salesOrderProduct/${salesOrderProductId}/swapHistory`),
+    );
+  }
 }

@@ -40,3 +40,13 @@
 
 1. deliveries all tabs.
 2. initiate delivery.
+
+---
+
+1. create sales Order dropdown behavior
+
+---
+
+1. SO creation product table.
+2. Dropdown connections in create SO.
+3. Swap feature in LO.

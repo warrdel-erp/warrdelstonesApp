@@ -19,6 +19,8 @@ interface ButtonProps extends TouchableOpacityProps {
   children?: React.ReactNode;
   /** Make button full width */
   fullWidth?: boolean;
+  /** Custom color for the button (border for outline, background for primary/secondary) */
+  color?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -31,6 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   children,
   fullWidth = false,
+  color: customColor,
   ...props
 }) => {
   const tokens = getTokens();
@@ -85,7 +88,7 @@ export const Button: React.FC<ButtonProps> = ({
     let variantStyle: ViewStyle = {};
     if (disabled) {
       variantStyle = {
-        backgroundColor: theme.gray3?.val || '#D1D5DB',
+        backgroundColor: theme.gray3?.val,
         borderWidth: 0,
         opacity: 0.6,
       };
@@ -93,9 +96,9 @@ export const Button: React.FC<ButtonProps> = ({
       switch (variant) {
         case 'primary':
           variantStyle = {
-            backgroundColor: theme.blue9?.val || '#3B82F6',
+            backgroundColor: theme.blue9?.val,
             borderWidth: 0,
-            shadowColor: theme.blue9?.val || '#3B82F6',
+            shadowColor: theme.blue9?.val,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
             shadowRadius: 4,
@@ -104,9 +107,9 @@ export const Button: React.FC<ButtonProps> = ({
           break;
         case 'secondary':
           variantStyle = {
-            backgroundColor: theme.green9?.val || '#10B981',
+            backgroundColor: theme.green9?.val,
             borderWidth: 0,
-            shadowColor: theme.green9?.val || '#10B981',
+            shadowColor: theme.green9?.val,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
             shadowRadius: 4,
@@ -117,7 +120,7 @@ export const Button: React.FC<ButtonProps> = ({
           variantStyle = {
             backgroundColor: 'transparent',
             borderWidth: 1.5,
-            borderColor: theme.blue8?.val || '#3B82F6',
+            borderColor: customColor || theme.blue8?.val,
           };
           break;
         case 'text':
@@ -137,21 +140,21 @@ export const Button: React.FC<ButtonProps> = ({
     let fontWeight: TextStyle = {};
 
     if (disabled) {
-      colorStyle = { color: theme.gray9?.val || '#6B7280' };
+      colorStyle = { color: theme.gray9?.val };
       fontWeight = { fontWeight: '500' };
     } else {
       switch (variant) {
         case 'primary':
         case 'secondary':
-          colorStyle = { color: theme.white?.val || '#FFFFFF' };
+          colorStyle = { color: theme.white?.val };
           fontWeight = { fontWeight: '600' };
           break;
         case 'outline':
-          colorStyle = { color: theme.blue9?.val || '#3B82F6' };
+          colorStyle = { color: customColor || theme.blue9?.val };
           fontWeight = { fontWeight: '600' };
           break;
         case 'text':
-          colorStyle = { color: theme.blue9?.val || '#3B82F6' };
+          colorStyle = { color: customColor || theme.blue9?.val };
           fontWeight = { fontWeight: '500' };
           break;
       }
@@ -182,18 +185,17 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getLoadingColor = (): string => {
     if (disabled) {
-      return theme.gray9?.val || '#6B7280';
+      return theme.gray9?.val;
     }
     switch (variant) {
       case 'primary':
       case 'secondary':
-        return theme.white?.val || '#FFFFFF';
+        return theme.white?.val;
       case 'outline':
-        return theme.blue9?.val || '#3B82F6';
       case 'text':
-        return theme.blue9?.val || '#3B82F6';
+        return customColor || theme.blue9?.val;
       default:
-        return theme.white?.val || '#FFFFFF';
+        return theme.white?.val;
     }
   };
 

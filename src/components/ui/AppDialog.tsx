@@ -100,8 +100,7 @@ export const AppDialog: React.FC<AppDialogProps> = ({
             <Dialog.Portal>
                 <Dialog.Overlay
                     key="overlay"
-                    opacity={0.8}
-                    backgroundColor="rgba(0, 0, 0)"
+                    backgroundColor={theme.modalOverlay?.val}
                     enterStyle={{ opacity: 0 }}
                     exitStyle={{ opacity: 0 }}
                 />

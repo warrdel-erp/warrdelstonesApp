@@ -3,8 +3,8 @@ import { services } from '../../network';
 import {
   AuthResponse,
   AuthUserData,
-  LoginCredentials,
   ClientUser,
+  LoginCredentials,
 } from '../../network/services/AuthService.ts';
 import { AsyncStorageUtils, STORAGE_KEYS } from '../../utils';
 import { createThunkFromApiResult } from '../utils/thunkHelpers.ts';
@@ -12,14 +12,15 @@ import { createThunkFromApiResult } from '../utils/thunkHelpers.ts';
 export interface AuthData {
   authResponse?: AuthUserData;
   loginUserDetail?: ClientUser;
+  me?: any;
   isLoading: boolean;
   error?: string;
 }
 
-// Initial state
 const initialState: AuthData = {
   authResponse: undefined,
   loginUserDetail: undefined,
+  me: undefined,
   isLoading: false,
   error: undefined,
 };
@@ -37,6 +38,10 @@ export const getUserDetail = createAsyncThunk(
     return createThunkFromApiResult(() => services.auth.getUser(userId), rejectWithValue);
   },
 );
+
+export const getMe = createAsyncThunk('auth/getMe', async (token: string, { rejectWithValue }) => {
+  return createThunkFromApiResult(() => services.auth.me(token), rejectWithValue);
+});
 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { rejectWithValue }) => {
   return createThunkFromApiResult(() => services.auth.logout(), rejectWithValue);
@@ -77,6 +82,10 @@ const authSlice = createSlice({
       })
       .addCase(getUserDetail.fulfilled, (state, action) => {
         state.loginUserDetail = action.payload ?? undefined;
+        state.error = undefined;
+      })
+      .addCase(getMe.fulfilled, (state, action) => {
+        state.me = action.payload?.data ?? undefined;
         state.error = undefined;
       })
       .addCase(loginUser.rejected, (state, action) => {

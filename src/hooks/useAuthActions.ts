@@ -1,8 +1,8 @@
-import { useAppDispatch } from '../store/hooks.ts';
-import { clearAuthState, setAuthState } from '../store/slices/authSlice.ts';
+import { useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext.tsx';
 import { AuthResponse } from '../network/services/AuthService.ts';
-import { useEffect } from 'react';
+import { useAppDispatch } from '../store/hooks.ts';
+import { clearAuthState, getMe, setAuthState } from '../store/slices/authSlice.ts';
 import { authContextManager } from '../utils/AuthContextManager.ts';
 
 /**
@@ -19,6 +19,7 @@ export const useAuthActions = () => {
 
   const loginUser = (authResponse: AuthResponse) => {
     dispatch(setAuthState(authResponse));
+    dispatch(getMe(authResponse.data.token));
     authContext.login(authResponse);
   };
 

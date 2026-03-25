@@ -1,11 +1,12 @@
 import { ArrowRightLeft } from '@tamagui/lucide-icons';
-import React, { useState } from 'react';
-import { getTokens, useTheme, XStack, YStack } from 'tamagui';
+import React, { useEffect, useState } from 'react';
+import { XStack, YStack, getTokens, useTheme } from 'tamagui';
 import { BodyText, Button } from '../ui';
 import CardWithHeader from '../ui/CardWithHeader';
 import { CheckBox } from '../ui/CheckBox';
 import FormTextInput from '../ui/FormTextInput';
 import MobileTable, { Column } from '../ui/MobileTable';
+import SwapProductDialog from './SwapProductDialog';
 
 export interface ProductForLO {
     id: number;
@@ -25,7 +26,7 @@ export interface ProductForLO {
                 warehouse: {
                     location: {
                         id: number;
-                        location: string;
+                        locationName: string;
                     };
                 };
             };
@@ -64,6 +65,7 @@ export interface ProductsTableForLOProps {
     onProductSelectionChange: (salesOrderProductId: number, selected: boolean, remeasureLength?: number, remeasureWidth?: number) => void;
     onRemeasureChange: (salesOrderProductId: number, length?: number, width?: number) => void;
     taxPercentage: number;
+    onRefresh: () => void;
 }
 
 interface ProductRow {
@@ -90,6 +92,7 @@ interface InventoryItem {
     remeasureLength?: number;
     remeasureWidth?: number;
     calculatedQty: number;
+    productId: number;
 }
 
 const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
@@ -98,12 +101,28 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
     onProductSelectionChange,
     onRemeasureChange,
     taxPercentage,
+    onRefresh,
 }) => {
     const tokens = getTokens();
     const theme = useTheme();
     const [expandedRows, setExpandedRows] = useState<(string | number)[]>([]);
 
-    console.log('products', products)
+    useEffect(() => {
+        if (products && products.length > 0 && expandedRows.length === 0) {
+            setExpandedRows(products.map(p => p.id));
+        }
+    }, [products]);
+
+    // Swap State
+    const [showSwapDialog, setShowSwapDialog] = useState(false);
+    const [selectedSopId, setSelectedSopId] = useState<number | null>(null);
+    const [currentProductId, setCurrentProductId] = useState<number | null>(null);
+
+    const handleSwapClick = (sopId: number, prodId: number) => {
+        setSelectedSopId(sopId);
+        setCurrentProductId(prodId);
+        setShowSwapDialog(true);
+    };
 
     // Transform products data
     const productRows: ProductRow[] = products.map(product => {
@@ -147,13 +166,14 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
                 barcode: sop.inventoryProduct.slab.barcode,
                 blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
                 slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-                location: `${sop.inventoryProduct.bin.warehouse.location.location} (${sop.inventoryProduct.bin.name})`,
+                location: `${sop.inventoryProduct?.bin?.warehouse?.location?.locationName} (${sop.inventoryProduct?.bin?.name})`,
                 qtySf: `${sop.inventoryProduct.slab.receivingLength}*${sop.inventoryProduct.slab.receivingWidth}=${sop.receivingAreaSqFt.toFixed(2)} SF`,
                 receivingLength: sop.inventoryProduct.slab.receivingLength,
                 receivingWidth: sop.inventoryProduct.slab.receivingWidth,
                 remeasureLength,
                 remeasureWidth,
                 calculatedQty,
+                productId: product.id,
             };
         });
 
@@ -184,7 +204,7 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
             label: 'Product(SKU)',
             accessorKey: 'productName',
             render: (value) => (
-                <BodyText color={theme.textPrimary?.val || '#1F2937'} style={{ fontWeight: '500' }}>
+                <BodyText color={theme.textPrimary?.val} style={{ fontWeight: '500' }}>
                     {value || '-'}
                 </BodyText>
             ),
@@ -335,9 +355,9 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
                         title="Swap"
                         variant="outline"
                         size="small"
-                        icon={<ArrowRightLeft size={16} color={theme.primary?.val || '#0891B2'} />}
+                        icon={<ArrowRightLeft size={16} color={theme.primary?.val} />}
                         onPress={() => {
-                            // TODO: Implement swap functionality
+                            handleSwapClick(row.salesOrderProductId, row.productId);
                         }}
                         disabled={!isSelected}
                     />
@@ -347,40 +367,50 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
     ];
 
     return (
-        <CardWithHeader title="Products">
-            <MobileTable
-                columns={columns as Column<Record<string, any>>[]}
-                data={productRows as Record<string, any>[]}
-                emptyMessage="No products available"
-                isChild={false}
-                expandableRows={{
-                    expandedRows,
-                    onExpandedRowsChange: setExpandedRows,
-                    isExpandable: (row: Record<string, any>) => row.inventoryItems && row.inventoryItems.length > 0,
-                    renderExpandedContent: (row: Record<string, any>) => {
-                        if (!row.inventoryItems || row.inventoryItems.length === 0) {
-                            return null;
-                        }
+        <YStack>
+            <CardWithHeader title="Products">
+                <MobileTable
+                    columns={columns as Column<Record<string, any>>[]}
+                    data={productRows as Record<string, any>[]}
+                    emptyMessage="No products available"
+                    isChild={false}
+                    expandableRows={{
+                        expandedRows,
+                        onExpandedRowsChange: setExpandedRows,
+                        isExpandable: (row: Record<string, any>) => row.inventoryItems && row.inventoryItems.length > 0,
+                        renderExpandedContent: (row: Record<string, any>) => {
+                            if (!row.inventoryItems || row.inventoryItems.length === 0) {
+                                return null;
+                            }
 
-                        return (
-                            <YStack
-                                paddingLeft={tokens.space[6].val}
-                                paddingTop={tokens.space[3].val}
-                                borderLeftWidth={2}
-                                borderLeftColor={theme.blue8?.val || '#3B82F6'}
-                                marginLeft={tokens.space[4].val}>
-                                <MobileTable
-                                    columns={inventoryColumns as Column<Record<string, any>>[]}
-                                    data={row.inventoryItems as Record<string, any>[]}
-                                    emptyMessage="No inventory items"
-                                    isChild={true}
-                                />
-                            </YStack>
-                        );
-                    },
-                }}
+                            return (
+                                <YStack
+                                    paddingLeft={tokens.space[6].val}
+                                    paddingTop={tokens.space[3].val}
+                                    borderLeftWidth={2}
+                                    borderLeftColor={theme.blue8?.val}
+                                    marginLeft={tokens.space[4].val}>
+                                    <MobileTable
+                                        columns={inventoryColumns as Column<Record<string, any>>[]}
+                                        data={row.inventoryItems as Record<string, any>[]}
+                                        emptyMessage="No inventory items"
+                                        isChild={true}
+                                    />
+                                </YStack>
+                            );
+                        },
+                    }}
+                />
+            </CardWithHeader>
+
+            <SwapProductDialog
+                open={showSwapDialog}
+                onOpenChange={setShowSwapDialog}
+                salesOrderProductId={selectedSopId}
+                productId={currentProductId}
+                onSuccess={onRefresh}
             />
-        </CardWithHeader>
+        </YStack>
     );
 };
 

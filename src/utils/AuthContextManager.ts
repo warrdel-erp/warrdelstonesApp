@@ -4,7 +4,7 @@ import { AuthResponse, AuthUserData } from '../network/services/AuthService';
 class AuthContextManager {
   private static instance: AuthContextManager;
   private logoutCallback: (() => void) | null = null;
-  private loginCallback: ((userData: AuthUserData) => void) | null = null;
+  private loginCallback: ((userData: AuthResponse) => void) | null = null;
 
   public static getInstance(): AuthContextManager {
     if (!AuthContextManager.instance) {
@@ -19,7 +19,7 @@ class AuthContextManager {
   }
 
   // Register the login callback from AuthContext
-  setLoginCallback(callback: (userData: AuthUserData) => void) {
+  setLoginCallback(callback: (userData: AuthResponse) => void) {
     this.loginCallback = callback;
   }
 

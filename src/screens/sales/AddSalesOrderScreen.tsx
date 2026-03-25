@@ -1,14 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { ScrollView, View } from 'react-native';
-import { Text, YStack, getTokens, useTheme } from 'tamagui';
+import { YStack, getTokens, useTheme } from 'tamagui';
 import { z } from 'zod';
 import { AddProductsToSO, SelectedInventoryProduct } from '../../components/sales/AddProductsToSO';
+import SelectedProductsSummary from '../../components/sales/SelectedProductsSummary';
 import Button from '../../components/ui/Button';
 import FormRenderer, { FormSectionConfig } from '../../components/ui/FormRenderer';
+import { ScreenId } from '../../navigation/navigationConstants';
 import { services } from '../../network';
+import { useAuthState } from '../../store/hooks';
 import { showErrorToast, showSuccessToast } from '../../utils';
+
 
 const salesOrderSchema = z.object({
     customer: z.number({ message: 'Customer is required' }).min(1, 'Customer is required'),
@@ -43,7 +48,13 @@ interface SalesOrderPayload {
 export const AddSalesOrderScreen: React.FC = () => {
     const tokens = getTokens();
     const theme = useTheme();
+    const navigation = useNavigation<any>();
     const [selectedProducts, setSelectedProducts] = React.useState<SelectedInventoryProduct[]>([]);
+
+
+    const auth = useAuthState()
+
+    console.log('ddddddd', auth)
 
     const form = useForm<SalesOrderFormData>({
         resolver: zodResolver(salesOrderSchema),
@@ -60,6 +71,13 @@ export const AddSalesOrderScreen: React.FC = () => {
             paymentTerms: undefined,
         },
     });
+
+    React.useEffect(() => {
+        if (auth.me?.defaultLocationId) {
+            form.setValue('soLocation', auth.me.defaultLocationId);
+        }
+    }, [auth.me?.defaultLocationId, form]);
+
 
     const watchedCustomerId = form.watch('customer');
 
@@ -89,7 +107,11 @@ export const AddSalesOrderScreen: React.FC = () => {
                 shippingAddressId: data.deliveryLocation,
                 paymentTerms: data.paymentTerms || 0,
                 deliveryType: 'delivery',
-                products: selectedProducts,
+                products: selectedProducts.map(p => ({
+                    inventoryProductId: p.inventoryProductId,
+                    unitPrice: p.unitPrice,
+                    taxApplied: p.taxApplied
+                })),
             };
 
             console.log('Submitting Sales Order:', payload);
@@ -98,10 +120,17 @@ export const AddSalesOrderScreen: React.FC = () => {
 
             if (response.data?.success) {
                 showSuccessToast('Sales order created successfully');
+                const orderId = response.data?.data?.salesOrder.id;
+
                 // Reset form and products
                 form.reset();
                 setSelectedProducts([]);
+
+                if (orderId) {
+                    navigation.navigate(ScreenId.SALES_ORDER_DETAIL, { salesOrderId: orderId });
+                }
             } else {
+
                 showErrorToast(response.data?.message || 'Failed to create sales order');
             }
         } catch (error: any) {
@@ -135,6 +164,7 @@ export const AddSalesOrderScreen: React.FC = () => {
                             ? { addressType: 'shipping' }
                             : undefined,
                         required: true,
+                        selectFirstByDefault: true,
                         width: '48%',
                     },
                     {
@@ -143,8 +173,10 @@ export const AddSalesOrderScreen: React.FC = () => {
                         label: 'SO Location',
                         endpoint: 'locations',
                         required: true,
-                        width: '48%',
+                        disabled: true,
+                        width: '100%',
                     },
+
                 ],
             },
             {
@@ -212,6 +244,27 @@ export const AddSalesOrderScreen: React.FC = () => {
         [watchedCustomerId],
     );
 
+
+    const handleDeleteProduct = (productId: number, serialNo?: string) => {
+        if (serialNo) {
+            // Delete specific inventory item
+            setSelectedProducts(prev => prev.filter(p => p.details?.combinedNumber !== serialNo));
+        } else {
+            // Delete all items of this product
+            setSelectedProducts(prev => prev.filter(p => p.details?.productId !== productId));
+        }
+    };
+
+
+    const handleToggleTax = (productId: number, checked: boolean) => {
+        setSelectedProducts(prev => prev.map(p => {
+            if (p.details?.productId === productId) {
+                return { ...p, taxApplied: checked };
+            }
+            return p;
+        }));
+    };
+
     return (
         <View
             style={{
@@ -236,21 +289,11 @@ export const AddSalesOrderScreen: React.FC = () => {
                         }}
                     />
 
-                    {selectedProducts.length > 0 && (
-                        <YStack
-                            padding={tokens.space[3].val}
-                            backgroundColor={theme.backgroundHover?.val}
-                            borderRadius={tokens.radius[3].val}
-                        >
-                            <Text
-                                fontSize={tokens.size[4].val}
-                                fontWeight="600"
-                                color={theme.textPrimary?.val}
-                            >
-                                {selectedProducts.length} product(s) added to order
-                            </Text>
-                        </YStack>
-                    )}
+                    <SelectedProductsSummary
+                        selectedProducts={selectedProducts}
+                        onDeleteProduct={handleDeleteProduct}
+                        onToggleTax={handleToggleTax}
+                    />
 
                     <Button
                         title="Create Sales Order"

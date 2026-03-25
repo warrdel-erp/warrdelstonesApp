@@ -6,6 +6,8 @@ import { services } from '../../network';
 import { AppDialog } from '../ui/AppDialog';
 import Button from '../ui/Button';
 import MobileTable, { Column } from '../ui/MobileTable';
+import StatusBadge from '../ui/StatusBadge';
+
 
 // Types based on API response
 interface Slab {
@@ -93,6 +95,7 @@ export interface SelectedInventoryProduct {
     inventoryProductId: number;
     unitPrice: string;
     taxApplied: boolean;
+    details?: InventoryProduct;
 }
 
 interface AddProductsToSOProps {
@@ -245,6 +248,18 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
             { id: 'slabNumber', label: 'Slab No', render: (_value, row) => row.slab?.slabNumber },
             { id: 'location', label: 'Location(Bin)', render: (_value, row) => row?.bin?.name },
             { id: 'qty', label: 'Qty(SF)', render: (_value, row) => `${row?.slab?.receivingLength}*${row?.slab?.receivingWidth}=${(row?.slab?.receivingLength * row?.slab?.receivingWidth / 144).toFixed(2)}SF` },
+            {
+                id: 'status',
+                label: 'Status',
+                render: (_value, row) => (
+                    row.hold ? (
+                        <StatusBadge status="warning" text="On Hold" size="small" />
+                    ) : (
+                        <StatusBadge status="success" text="Available" size="small" />
+                    )
+                )
+            },
+
 
         ],
         [tokens, theme]
@@ -257,9 +272,12 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
             selectedInventoryProducts.forEach(inventoryProductId => {
                 // Find the product that contains this inventory product
                 let productId: number | null = null;
+                let inventoryProduct: InventoryProduct | null = null;
                 for (const [pid, invProducts] of Object.entries(inventoryProductsCache)) {
-                    if (invProducts.some(ip => ip.id === inventoryProductId)) {
+                    const found = invProducts.find(ip => ip.id === inventoryProductId);
+                    if (found) {
                         productId = Number(pid);
+                        inventoryProduct = found;
                         break;
                     }
                 }
@@ -269,6 +287,7 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                         inventoryProductId,
                         unitPrice: productPrices[productId],
                         taxApplied: true,
+                        details: inventoryProduct || undefined,
                     });
                 }
             });
@@ -355,12 +374,16 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                                             onSelectionChange={(selected) => {
                                                 setSelectedInventoryProducts(new Set(selected as number[]));
                                             }}
+                                            isRowSelectable={(row: Record<string, any>) => !row.hold}
                                             columns={inventoryProductColumns as Column<Record<string, any>>[]}
                                             data={inventoryProducts as Record<string, any>[]}
                                             clickable={true}
                                             onRowClick={(inventoryProduct: Record<string, any>) => {
-                                                handleToggleInventoryProduct(inventoryProduct.id);
+                                                if (!inventoryProduct.hold) {
+                                                    handleToggleInventoryProduct(inventoryProduct.id);
+                                                }
                                             }}
+
                                             emptyMessage="No inventory products available"
                                             isChild={true}
                                             maxHeight={300}

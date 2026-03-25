@@ -8,11 +8,12 @@ import {
     getTokens,
     useTheme
 } from 'tamagui';
-import DatePicker from './DatePicker';
+import FormDatePicker from './FormDatePicker';
 import FormFieldWrapper from './FormFieldWrapper';
 import FormTextArea from './FormTextArea';
 import FormTextInput from './FormTextInput';
 import SelectDropdown, { DropdownOption } from './SelectDropdown';
+import FormSwitch from './FormSwitch';
 
 export type FormFieldType =
     | 'text'
@@ -30,6 +31,7 @@ export interface FormFieldConfig {
     placeholder?: string;
     helperText?: string;
     required?: boolean;
+    disabled?: boolean;
     width?: string | number;
     /** Dropdown options when type is 'dropdown' - either provide options directly or use endpoint to fetch */
     options?: DropdownOption<any>[];
@@ -39,7 +41,10 @@ export interface FormFieldConfig {
     queryParams?: Record<string, any>;
     /** Enable multi-select for dropdown */
     multiSelect?: boolean;
+    /** Automatically select the first option when options are loaded */
+    selectFirstByDefault?: boolean;
     /** Custom validation rules for react-hook-form */
+
     rules?: {
         required?: boolean | string;
         min?: number | { value: number; message: string };
@@ -71,7 +76,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     const theme = useTheme();
     const { control, formState } = form;
 
-    const renderFieldInput = (field: FormFieldConfig, value: any, onChange: (value: any) => void, hasError: boolean) => {
+    const renderFieldInput = (field: FormFieldConfig, value: any, onChange: (value: any) => void, hasError: boolean, isDisabled?: boolean) => {
+        const disabled = field.disabled || isDisabled;
 
         switch (field.type) {
             case 'text':
@@ -83,7 +89,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         placeholder={field.placeholder}
                         type={field.type}
                         hasError={hasError}
+                        disabled={disabled}
                     />
+
                 );
 
             case 'textarea':
@@ -93,34 +101,43 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         onChange={onChange}
                         placeholder={field.placeholder}
                         hasError={hasError}
+                        disabled={disabled}
                     />
+
                 );
 
             case 'checkbox':
                 return (
                     <XStack alignItems="center" gap={tokens.space[2].val}>
-                        <Switch
+                        <FormSwitch
                             size="$3"
                             checked={!!value}
                             onCheckedChange={(checked) => onChange(checked)}
+                            disabled={disabled}
                         />
                         <Text
                             fontSize={tokens.size[3.5].val}
                             color={theme.textPrimary?.val || '#111827'}
+                            opacity={disabled ? 0.6 : 1}
                         >
                             {field.placeholder || field.label}
                         </Text>
                     </XStack>
+
                 );
+
 
             case 'switch':
                 return (
-                    <Switch
+                    <FormSwitch
                         size="$3"
                         checked={!!value}
                         onCheckedChange={(checked) => onChange(checked)}
+                        disabled={disabled}
                     />
+
                 );
+
 
             case 'dropdown': {
                 return (
@@ -133,20 +150,27 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         multiSelect={field.multiSelect}
                         placeholder={field.placeholder}
                         hasError={hasError}
+                        disabled={disabled}
+                        selectFirstByDefault={field.selectFirstByDefault}
                     />
+
+
                 );
             }
 
             case 'date': {
                 return (
-                    <DatePicker
+                    <FormDatePicker
                         value={value}
-                        onChange={(date) => onChange(date)}
+                        onChange={(date: Date | undefined) => onChange(date)}
                         placeholder={field.placeholder}
                         hasError={hasError}
+                        disabled={disabled}
                     />
+
                 );
             }
+
 
             default:
                 return <Text>Unknown field type: {field.type}</Text>;
@@ -210,10 +234,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                                 <Controller
                                     name={field.name}
                                     control={control}
-                                    render={({ field: { value, onChange } }) => {
-                                        const input = renderFieldInput(field, value, onChange, hasError);
+                                    render={({ field: { value, onChange, disabled: controllerDisabled } }) => {
+                                        const input = renderFieldInput(field, value, onChange, hasError, controllerDisabled);
                                         return input || <Text>Unsupported field type</Text>;
                                     }}
+
+
                                 />
                             </FormFieldWrapper>
                         );

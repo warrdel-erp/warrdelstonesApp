@@ -149,9 +149,6 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
     return (
       <TouchableOpacity
         key={item.id.toString()}
-        onPress={() => {
-          NavigationService.navigate(ScreenId.SALES_ORDER_DETAIL, { salesOrderId: item.id });
-        }}
         activeOpacity={0.9}
       >
         <CardWithHeader
