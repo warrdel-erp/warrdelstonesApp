@@ -356,6 +356,8 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
                     <ProductsTableForLODetail
                         products={data.products}
                         taxLabel={tax ? `${tax.label}(${tax.value}%)` : '--'}
+                        canSwap={data.stage !== 'invoiced'}
+                        onRefresh={fetchData}
                     />
                 </YStack>
 

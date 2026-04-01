@@ -1,8 +1,16 @@
+import { ArrowRightLeft, History } from '@tamagui/lucide-icons';
+
 import React, { useState } from 'react';
+
 import { getTokens, useTheme, XStack, YStack } from 'tamagui';
-import { BodyText } from '../ui';
+import { BodyText, Button } from '../ui';
+
 import CardWithHeader from '../ui/CardWithHeader';
 import MobileTable, { Column } from '../ui/MobileTable';
+import SwapHistoryDialog from './SwapHistoryDialog';
+import SwapProductDialog from './SwapProductDialog';
+
+
 
 export interface ProductForPLDetail {
     id: number;
@@ -34,7 +42,9 @@ export interface ProductForPLDetail {
                 receivingWidth: number;
             };
         };
+        swapHistories?: any[];
     }>;
+
     calculations: {
         packagingList: {
             subTotal: number;
@@ -49,7 +59,10 @@ export interface ProductForPLDetail {
 export interface ProductsTableForPLDetailProps {
     products: ProductForPLDetail[];
     taxLabel: string;
+    canSwap?: boolean;
+    onRefresh?: () => void;
 }
+
 
 interface ProductRow {
     id: number;
@@ -72,15 +85,46 @@ interface InventoryItem {
     location: string;
     quantity: string;
     slabRemeasureQty: string;
+    salesOrderProductId: number;
+    productId: number;
+    historyCount: number;
+    productName: string;
+    productType: string;
 }
+
+
 
 const ProductsTableForPLDetail: React.FC<ProductsTableForPLDetailProps> = ({
     products,
     taxLabel,
+    canSwap,
+    onRefresh,
 }) => {
+
     const tokens = getTokens();
     const theme = useTheme();
     const [expandedRows, setExpandedRows] = useState<(string | number)[]>([]);
+
+    // Swap State
+    const [showSwapDialog, setShowSwapDialog] = useState(false);
+    const [selectedSopId, setSelectedSopId] = useState<number | null>(null);
+    const [currentProductId, setCurrentProductId] = useState<number | null>(null);
+
+    const handleSwapClick = (sopId: number, prodId: number) => {
+        setSelectedSopId(sopId);
+        setCurrentProductId(prodId);
+        setShowSwapDialog(true);
+    };
+
+    const [showHistory, setShowHistory] = useState(false);
+    const [selectedSop, setSelectedSop] = useState<{ id: number, name: string, type: string } | null>(null);
+
+    const handleHistoryClick = (id: number, name: string, type: string) => {
+        setSelectedSop({ id, name, type });
+        setShowHistory(true);
+    };
+
+
 
     // Transform products data
     const productRows: ProductRow[] = products.map((product, index) => {
@@ -107,7 +151,14 @@ const ProductsTableForPLDetail: React.FC<ProductsTableForPLDetailProps> = ({
                 location: sop.inventoryProduct.bin.name,
                 quantity: `${sop.inventoryProduct.slab.receivingLength}×${sop.inventoryProduct.slab.receivingWidth} = ${receivingQty.toFixed(2)} SF`,
                 slabRemeasureQty: `${remeasureLength}×${remeasureWidth} = ${remeasureQty.toFixed(2)} SF`,
+                salesOrderProductId: sop.id,
+                productId: product.id,
+                historyCount: sop.swapHistories?.length || 0,
+                productName: product.name,
+                productType: 'Slab',
             };
+
+
         });
 
         // Get tax percentage from first salesOrderProduct
@@ -239,7 +290,32 @@ const ProductsTableForPLDetail: React.FC<ProductsTableForPLDetailProps> = ({
             id: 'actions',
             label: 'Actions',
             width: 100,
-            render: () => <BodyText>--</BodyText>,
+            render: (_value, row) => {
+                if (!canSwap && row.historyCount === 0) return <BodyText>--</BodyText>;
+                return (
+                    <XStack gap={tokens.space[2].val}>
+                        {canSwap && (
+                            <Button
+                                title=""
+                                variant="outline"
+                                size="small"
+                                onPress={() => handleSwapClick(row.salesOrderProductId, row.productId)}
+                                icon={<ArrowRightLeft size={16} color={theme.primary?.val || '#0891B2'} />}
+                            />
+                        )}
+                        {row.historyCount > 0 && (
+                            <Button
+                                title={row.historyCount.toString()}
+                                variant="outline"
+                                size="small"
+                                onPress={() => handleHistoryClick(row.salesOrderProductId, row.productName, row.productType)}
+                                icon={<History size={16} color={theme.orange8?.val} />}
+                                color={theme.orange8?.val}
+                            />
+                        )}
+                    </XStack>
+                );
+            },
         },
     ];
 
@@ -277,8 +353,26 @@ const ProductsTableForPLDetail: React.FC<ProductsTableForPLDetailProps> = ({
                     },
                 }}
             />
+            <SwapProductDialog
+                open={showSwapDialog}
+                onOpenChange={setShowSwapDialog}
+                salesOrderProductId={selectedSopId}
+                productId={currentProductId}
+                onSuccess={onRefresh || (() => { })}
+            />
+            {selectedSop && (
+                <SwapHistoryDialog
+                    open={showHistory}
+                    onOpenChange={setShowHistory}
+                    salesOrderProductId={selectedSop.id}
+                    productName={selectedSop.name}
+                    productType={selectedSop.type}
+                />
+            )}
         </CardWithHeader>
     );
 };
+
+
 
 export default ProductsTableForPLDetail;

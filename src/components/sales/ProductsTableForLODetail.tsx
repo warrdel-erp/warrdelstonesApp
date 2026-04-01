@@ -1,10 +1,13 @@
-import { History } from '@tamagui/lucide-icons';
+import { ArrowRightLeft, History } from '@tamagui/lucide-icons';
+
 import React, { useState } from 'react';
 import { getTokens, useTheme, XStack, YStack } from 'tamagui';
 import { BodyText, Button } from '../ui';
 import CardWithHeader from '../ui/CardWithHeader';
 import MobileTable, { Column } from '../ui/MobileTable';
 import SwapHistoryDialog from './SwapHistoryDialog';
+import SwapProductDialog from './SwapProductDialog';
+
 
 export interface ProductForLODetail {
     id: number;
@@ -53,7 +56,10 @@ export interface ProductForLODetail {
 export interface ProductsTableForLODetailProps {
     products: ProductForLODetail[];
     taxLabel: string;
+    canSwap?: boolean;
+    onRefresh?: () => void;
 }
+
 
 interface ProductRow {
     id: number;
@@ -80,12 +86,17 @@ interface InventoryItem {
     historyCount: number;
     productName: string;
     productType: string;
+    productId: number;
 }
+
 
 const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
     products,
     taxLabel,
+    canSwap,
+    onRefresh,
 }) => {
+
     const tokens = getTokens();
     const theme = useTheme();
     const [expandedRows, setExpandedRows] = useState<(string | number)[]>([]);
@@ -93,7 +104,19 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSop, setSelectedSop] = useState<{ id: number, name: string, type: string } | null>(null);
 
+    // Swap State
+    const [showSwapDialog, setShowSwapDialog] = useState(false);
+    const [selectedSopId, setSelectedSopId] = useState<number | null>(null);
+    const [currentProductId, setCurrentProductId] = useState<number | null>(null);
+
+    const handleSwapClick = (sopId: number, prodId: number) => {
+        setSelectedSopId(sopId);
+        setCurrentProductId(prodId);
+        setShowSwapDialog(true);
+    };
+
     const handleHistoryClick = (id: number, name: string, type: string) => {
+
         setSelectedSop({ id, name, type });
         setShowHistory(true);
     };
@@ -127,7 +150,9 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
                 historyCount: sop.swapHistories?.length || 0,
                 productName: product.name,
                 productType: sop.inventoryProduct.isSlabType ? 'Slab' : 'Piece',
+                productId: product.id,
             };
+
         });
 
         // Get tax percentage from first salesOrderProduct
@@ -260,22 +285,35 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
             label: 'Actions',
             width: 100,
             render: (_value, row) => {
-                if (row.historyCount === 0) return <BodyText>--</BodyText>;
                 return (
                     <XStack gap={tokens.space[2].val}>
-                        <Button
-                            variant="outline"
-                            size="small"
-                            onPress={() => handleHistoryClick(row.salesOrderProductId, row.productName, row.productType)}
-                            icon={<History size={16} color={theme.orange8?.val} />}
-                            title={row.historyCount.toString()}
-                            color={theme.orange8?.val}
-                        />
+                        {canSwap && (
+                            <Button
+                                title=""
+                                variant="outline"
+                                size="small"
+                                onPress={() => handleSwapClick(row.salesOrderProductId, row.productId)}
+                                icon={<ArrowRightLeft size={16} color={theme.primary?.val || '#0891B2'} />}
+                            />
+                        )}
+
+                        {row.historyCount > 0 && (
+                            <Button
+                                variant="outline"
+                                size="small"
+                                onPress={() => handleHistoryClick(row.salesOrderProductId, row.productName, row.productType)}
+                                icon={<History size={16} color={theme.orange8?.val} />}
+                                title={row.historyCount.toString()}
+                                color={theme.orange8?.val}
+                            />
+                        )}
+                        {!canSwap && row.historyCount === 0 && <BodyText>--</BodyText>}
                     </XStack>
                 );
             },
         },
     ];
+
 
     return (
         <CardWithHeader title="Products">
@@ -320,8 +358,16 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
                     productType={selectedSop.type}
                 />
             )}
+            <SwapProductDialog
+                open={showSwapDialog}
+                onOpenChange={setShowSwapDialog}
+                salesOrderProductId={selectedSopId}
+                productId={currentProductId}
+                onSuccess={onRefresh || (() => { })}
+            />
         </CardWithHeader>
     );
 };
+
 
 export default ProductsTableForLODetail;

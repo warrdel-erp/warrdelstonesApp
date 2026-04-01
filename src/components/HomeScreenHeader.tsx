@@ -7,6 +7,8 @@ import TextInput from './ui/TextInput.tsx';
 import { useScreenContext } from '../context/ScreenContext.tsx';
 import IconButton from './ui/IconButton.tsx';
 import { Caption } from './ui';
+import NavigationService from '../navigation/NavigationService';
+import { ScreenId, StackId } from '../navigation/navigationConstants';
 
 interface HomeScreenHeaderProps {
   navigation: any;
@@ -83,13 +85,31 @@ export const HomeScreenHeader: React.FC<HomeScreenHeaderProps> = props => {
           onPress={toggleSearchMode}
         />
         {!searching && (
-          <IconButton
-            iconName={'shopping-cart'}
-            size={'medium'}
-            variant={'plain'}
-            iconColor={theme.colors.text.onPrimary}
-            onPress={() => {}}
-          />
+          <View style={{ position: 'relative' }}>
+            <IconButton
+              iconName={'shopping-cart'}
+              size={'medium'}
+              variant={'plain'}
+              iconColor={theme.colors.text.onPrimary}
+              onPress={() => NavigationService.navigate({ stack: StackId.SALES, screen: ScreenId.CART })}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: -4,
+                backgroundColor: '#3B82F6',
+                borderRadius: 10,
+                width: 18,
+                height: 18,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: theme.colors.primaryDark,
+              }}>
+              <Caption style={{ fontSize: 10, color: 'white', fontWeight: 'bold' }}>3</Caption>
+            </View>
+          </View>
         )}
 
         {!searching && (

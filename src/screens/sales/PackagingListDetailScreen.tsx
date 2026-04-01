@@ -42,7 +42,9 @@ export interface PackagingListDetailData {
             contactEmail: string;
             contactNumber: string;
         };
+        stage: string;
         salesOrder: {
+
             id: number;
             clientSoNumber: number;
             tax: {
@@ -354,7 +356,10 @@ const PackagingListDetailScreen: React.FC<PackagingListDetailScreenProps> = prop
                     <ProductsTableForPLDetail
                         products={data.products}
                         taxLabel={tax ? `${tax.label}(${tax.value}%)` : '--'}
+                        canSwap={data.loadingOrder.stage !== 'invoiced'}
+                        onRefresh={fetchData}
                     />
+
                 </YStack>
 
                 {/* Financial Summary and Actions */}

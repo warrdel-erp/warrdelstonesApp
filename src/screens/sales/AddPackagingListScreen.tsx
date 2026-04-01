@@ -172,17 +172,37 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
         }
     };
 
+    const handleProductSelectionChange = (salesOrderProductId: number, selected: boolean, remeasureLength?: number, remeasureWidth?: number) => {
+        setSelectedProducts(prev => {
+            const newMap = new Map(prev);
+            const existing = newMap.get(salesOrderProductId);
+            if (selected) {
+                newMap.set(salesOrderProductId, {
+                    salesOrderProductId,
+                    plRemeasureLength: existing?.plRemeasureLength ?? remeasureLength,
+                    plRemeasureWidth: existing?.plRemeasureWidth ?? remeasureWidth,
+                });
+            } else {
+                newMap.delete(salesOrderProductId);
+            }
+            return newMap;
+        });
+    };
+
     const handleRemeasureChange = (salesOrderProductId: number, length?: number, width?: number) => {
         setSelectedProducts(prev => {
             const newMap = new Map(prev);
+            const existing = newMap.get(salesOrderProductId);
             newMap.set(salesOrderProductId, {
                 salesOrderProductId,
+                ...existing,
                 plRemeasureLength: length,
                 plRemeasureWidth: width,
             });
             return newMap;
         });
     };
+
 
     const calculateTotals = () => {
         if (!data) return { subtotal: 0, serviceCharges: 0, taxable: 0, tax: 0, total: 0 };
@@ -428,9 +448,12 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                     <ProductsTableForPL
                         products={data.products}
                         selectedProducts={selectedProducts}
+                        onProductSelectionChange={handleProductSelectionChange}
                         onRemeasureChange={handleRemeasureChange}
                         taxPercentage={data.salesOrder.tax.value}
+                        onRefresh={fetchData}
                     />
+
                 </YStack>
 
                 {/* Financial Summary and Actions */}

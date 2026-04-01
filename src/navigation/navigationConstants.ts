@@ -169,6 +169,7 @@ export const ScreenId = {
   PROGRAM_OURCOME_LIST: 'ProgramOutcomeList',
   COURSE_DETAIL: 'CourseDetail',
   SESSION_DETAILS: 'SessionDetails',
+  CART: 'Cart',
 } as const;
 
 export type StackIdType = (typeof StackId)[keyof typeof StackId];

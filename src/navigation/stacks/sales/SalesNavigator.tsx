@@ -3,6 +3,7 @@ import React from 'react';
 import AddLoadingOrderScreen from '../../../screens/sales/AddLoadingOrderScreen.tsx';
 import AddPackagingListScreen from '../../../screens/sales/AddPackagingListScreen.tsx';
 import AddSalesOrderScreen from '../../../screens/sales/AddSalesOrderScreen.tsx';
+import CartScreen from '../../../screens/sales/CartScreen.tsx';
 import InvoiceDetailScreen from '../../../screens/sales/InvoiceDetailScreen.tsx';
 import LoadingOrderDetailScreen from '../../../screens/sales/LoadingOrderDetailScreen.tsx';
 import PackagingListDetailScreen from '../../../screens/sales/PackagingListDetailScreen.tsx';
@@ -74,6 +75,14 @@ export const SALES_SCREENS: ScreenItem[] = [
     title: 'Invoice Details',
     parentStack: 'Sales',
     component: InvoiceDetailScreen,
+    roles: ALL_ROLES,
+    isRoot: false,
+  },
+  {
+    id: ScreenId.CART,
+    title: 'Cart',
+    parentStack: 'Sales',
+    component: CartScreen,
     roles: ALL_ROLES,
     isRoot: false,
   },

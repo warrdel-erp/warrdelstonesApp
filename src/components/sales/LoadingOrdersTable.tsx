@@ -94,19 +94,23 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
             });
         }
 
-        // Always add create actions
-        actions.push(
-            {
+        // Add create actions only if they don't exist
+        if (!lo.packagingList) {
+            actions.push({
                 label: 'Create Packaging',
                 icon: Package,
                 onPress: () => onCreatePackaging?.(lo.id),
-            },
-            {
+            });
+        }
+
+        if (!lo.invoice) {
+            actions.push({
                 label: 'Create Invoice',
                 icon: FileText,
                 onPress: () => onCreateInvoice?.(lo.id),
-            },
-        );
+            });
+        }
+
 
         const detailItems = [
             {

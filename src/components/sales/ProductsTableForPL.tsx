@@ -3,8 +3,12 @@ import React, { useState } from 'react';
 import { getTokens, useTheme, XStack, YStack } from 'tamagui';
 import { BodyText, Button } from '../ui';
 import CardWithHeader from '../ui/CardWithHeader';
+import { CheckBox } from '../ui/CheckBox';
 import FormTextInput from '../ui/FormTextInput';
+
 import MobileTable, { Column } from '../ui/MobileTable';
+import SwapProductDialog from './SwapProductDialog';
+
 
 export interface ProductForPL {
     id: number;
@@ -58,9 +62,13 @@ export interface SelectedProduct {
 export interface ProductsTableForPLProps {
     products: ProductForPL[];
     selectedProducts: Map<number, SelectedProduct>;
+    onProductSelectionChange: (salesOrderProductId: number, selected: boolean, remeasureLength?: number, remeasureWidth?: number) => void;
     onRemeasureChange: (salesOrderProductId: number, length?: number, width?: number) => void;
+
     taxPercentage: number;
+    onRefresh: () => void;
 }
+
 
 interface ProductRow {
     id: number;
@@ -86,17 +94,35 @@ interface InventoryItem {
     plRemeasureLength?: number;
     plRemeasureWidth?: number;
     calculatedQty: number;
+    productId: number;
 }
+
 
 const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
     products,
     selectedProducts,
+    onProductSelectionChange,
     onRemeasureChange,
     taxPercentage,
+    onRefresh,
 }) => {
+
+
     const tokens = getTokens();
     const theme = useTheme();
     const [expandedRows, setExpandedRows] = useState<(string | number)[]>([]);
+
+    // Swap State
+    const [showSwapDialog, setShowSwapDialog] = useState(false);
+    const [selectedSopId, setSelectedSopId] = useState<number | null>(null);
+    const [currentProductId, setCurrentProductId] = useState<number | null>(null);
+
+    const handleSwapClick = (sopId: number, prodId: number) => {
+        setSelectedSopId(sopId);
+        setCurrentProductId(prodId);
+        setShowSwapDialog(true);
+    };
+
 
     // Transform products data
     const productRows: ProductRow[] = products.map(product => {
@@ -107,27 +133,32 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
         let loadingTotal = 0;
 
         const inventoryItems: InventoryItem[] = productSalesOrderProducts.map(sop => {
+            const isSelected = selectedProducts.has(sop.id);
             const selected = selectedProducts.get(sop.id);
+            const hasStoredDimensions = selected !== undefined;
 
             // For display: use plRemeasure if available, otherwise use loRemeasure, otherwise use receiving dimensions
-            const plRemeasureLength = selected?.plRemeasureLength !== undefined
+            const plRemeasureLength = hasStoredDimensions
                 ? selected.plRemeasureLength
                 : (sop.loRemeasureLength !== undefined ? sop.loRemeasureLength : sop.inventoryProduct.slab.receivingLength);
-            const plRemeasureWidth = selected?.plRemeasureWidth !== undefined
+            const plRemeasureWidth = hasStoredDimensions
                 ? selected.plRemeasureWidth
                 : (sop.loRemeasureWidth !== undefined ? sop.loRemeasureWidth : sop.inventoryProduct.slab.receivingWidth);
 
             // For calculation, use plRemeasure if available, otherwise use loRemeasure, otherwise receiving
-            const calcLength = selected?.plRemeasureLength !== undefined
+            const calcLength = (selected?.plRemeasureLength !== undefined)
                 ? selected.plRemeasureLength
                 : (sop.loRemeasureLength !== undefined ? sop.loRemeasureLength : sop.inventoryProduct.slab.receivingLength);
-            const calcWidth = selected?.plRemeasureWidth !== undefined
+            const calcWidth = (selected?.plRemeasureWidth !== undefined)
                 ? selected.plRemeasureWidth
                 : (sop.loRemeasureWidth !== undefined ? sop.loRemeasureWidth : sop.inventoryProduct.slab.receivingWidth);
             const calculatedQty = (calcLength * calcWidth) / 144; // Convert to square feet
 
-            loadingQty += calculatedQty;
-            loadingTotal += calculatedQty * unitPrice;
+            if (isSelected) {
+                loadingQty += calculatedQty;
+                loadingTotal += calculatedQty * unitPrice;
+            }
+
 
             return {
                 salesOrderProductId: sop.id,
@@ -142,7 +173,9 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
                 plRemeasureLength,
                 plRemeasureWidth,
                 calculatedQty,
+                productId: product.id,
             };
+
         });
 
         const loadingTax = loadingTotal * (taxPercentage / 100);
@@ -222,7 +255,30 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
 
     const inventoryColumns: Column<InventoryItem>[] = [
         {
+            id: 'checkbox',
+            label: '',
+            width: 50,
+            render: (_value, row) => {
+                const isSelected = selectedProducts.has(row.salesOrderProductId);
+                return (
+                    <CheckBox
+                        checked={isSelected}
+                        onChange={(checked) => {
+                            onProductSelectionChange(
+                                row.salesOrderProductId,
+                                checked,
+                                row.plRemeasureLength,
+                                row.plRemeasureWidth,
+                            );
+                        }}
+                        size="small"
+                    />
+                );
+            },
+        },
+        {
             id: 'serialNo',
+
             label: 'Serial Num',
             accessorKey: 'serialNo',
             width: 80,
@@ -306,7 +362,7 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
                         size="small"
                         icon={<ArrowRightLeft size={16} color={theme.primary?.val || '#0891B2'} />}
                         onPress={() => {
-                            // TODO: Implement swap functionality
+                            handleSwapClick(row.salesOrderProductId, row.productId);
                         }}
                     />
                 );
@@ -315,42 +371,53 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
     ];
 
     return (
-        <CardWithHeader title="Products">
-            <MobileTable
-                columns={columns as Column<Record<string, any>>[]}
-                data={productRows as Record<string, any>[]}
-                emptyMessage="No products available"
-                isChild={false}
-                expandableRows={{
-                    expandedRows,
-                    onExpandedRowsChange: setExpandedRows,
-                    isExpandable: (row: Record<string, any>) => row.inventoryItems && row.inventoryItems.length > 0,
-                    renderExpandedContent: (row: Record<string, any>) => {
-                        if (!row.inventoryItems || row.inventoryItems.length === 0) {
-                            return null;
-                        }
+        <YStack>
+            <CardWithHeader title="Products">
+                <MobileTable
+                    columns={columns as Column<Record<string, any>>[]}
+                    data={productRows as Record<string, any>[]}
+                    emptyMessage="No products available"
+                    isChild={false}
+                    expandableRows={{
+                        expandedRows,
+                        onExpandedRowsChange: setExpandedRows,
+                        isExpandable: (row: Record<string, any>) => row.inventoryItems && row.inventoryItems.length > 0,
+                        renderExpandedContent: (row: Record<string, any>) => {
+                            if (!row.inventoryItems || row.inventoryItems.length === 0) {
+                                return null;
+                            }
 
-                        return (
-                            <YStack
-                                paddingLeft={tokens.space[6].val}
-                                paddingTop={tokens.space[3].val}
-                                borderLeftWidth={2}
-                                borderLeftColor={theme.blue8?.val || '#3B82F6'}
-                                marginLeft={tokens.space[4].val}>
-                                <MobileTable
-                                    columns={inventoryColumns as Column<Record<string, any>>[]}
-                                    data={row.inventoryItems as Record<string, any>[]}
-                                    emptyMessage="No inventory items"
-                                    isChild={true}
-                                />
-                            </YStack>
-                        );
-                    },
-                }}
+                            return (
+                                <YStack
+                                    paddingLeft={tokens.space[6].val}
+                                    paddingTop={tokens.space[3].val}
+                                    borderLeftWidth={2}
+                                    borderLeftColor={theme.blue8?.val || '#3B82F6'}
+                                    marginLeft={tokens.space[4].val}>
+                                    <MobileTable
+                                        columns={inventoryColumns as Column<Record<string, any>>[]}
+                                        data={row.inventoryItems as Record<string, any>[]}
+                                        emptyMessage="No inventory items"
+                                        isChild={true}
+                                    />
+                                </YStack>
+                            );
+                        },
+                    }}
+                />
+            </CardWithHeader>
+
+            <SwapProductDialog
+                open={showSwapDialog}
+                onOpenChange={setShowSwapDialog}
+                salesOrderProductId={selectedSopId}
+                productId={currentProductId}
+                onSuccess={onRefresh}
             />
-        </CardWithHeader>
+        </YStack>
     );
 };
+
 
 export default ProductsTableForPL;
 
