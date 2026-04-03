@@ -38,7 +38,7 @@ export const AppContextSelector: React.FC<AppContextSelectorProps> = props => {
         style={[styles.dropdownItem, selected && styles.dropdownItemSelected]}
         onPress={() => handleSubmit(item)}>
         <Heading6 style={[styles.dropdownItemText, selected && styles.dropdownItemTextSelected]}>
-          {item.location}
+          {item.locationName}
         </Heading6>
       </TouchableOpacity>
     );

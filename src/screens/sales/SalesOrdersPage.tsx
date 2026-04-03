@@ -103,7 +103,7 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
       },
       {
         label: 'Location',
-        value: item.soLocation.location,
+        value: item.soLocation.locationName,
         width: '30%',
       },
       {

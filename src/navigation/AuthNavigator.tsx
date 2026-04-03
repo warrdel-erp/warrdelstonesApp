@@ -16,7 +16,7 @@ const AuthNavigator: React.FC = () => {
   return (
     <AuthStack.Navigator
       screenOptions={{
-        headerShown: true, // Hide headers for auth screens
+        headerShown: false, // Hide headers for auth screens
       }}
       initialRouteName="Login"
     >

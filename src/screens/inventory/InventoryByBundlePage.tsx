@@ -1,20 +1,18 @@
-import React, { useEffect } from 'react';
-import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
+import { useFocusEffect } from '@react-navigation/native';
+import React from 'react';
 import { FlatList, ListRenderItemInfo, TouchableOpacity, View } from 'react-native';
-import theme from '../../theme';
-import { EmptyList } from '../../components/ui/EmptyList.tsx';
-import { useAppDispatch, useAppState, useInventory } from '../../store/hooks.ts';
-import { Inventory, SiplElement } from '../../types/InventoryTypes.ts';
-import { showErrorToast } from '../../utils';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Accordion, AccordionGroup, Heading4, LabelValue } from '../../components/ui';
 import Card from '../../components/ui/Card.tsx';
+import { EmptyList } from '../../components/ui/EmptyList.tsx';
+import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import NavigationService from '../../navigation/NavigationService.ts';
 import { ScreenId } from '../../navigation/navigationConstants.ts';
-import { Accordion, AccordionGroup, Heading4, LabelValue } from '../../components/ui';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { UpdateProductsPricingModal } from './UpdateProductsPricingModal.tsx';
 import { services } from '../../network';
-import { useFocusEffect } from '@react-navigation/native';
-import { getInventory } from '../../store/slices/inventorySlice.ts';
+import { useAppState } from '../../store/hooks.ts';
+import theme from '../../theme';
+import { Inventory } from '../../types/InventoryTypes.ts';
+import { showErrorToast } from '../../utils';
 
 export const InventoryByBundlePage: React.FC = () => {
   const { selectedLocation } = useAppState();
@@ -26,7 +24,7 @@ export const InventoryByBundlePage: React.FC = () => {
       if (selectedLocation) {
         getInventory();
       }
-      return () => {};
+      return () => { };
     }, [selectedLocation]),
   );
 

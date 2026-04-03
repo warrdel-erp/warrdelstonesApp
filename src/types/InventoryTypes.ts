@@ -232,7 +232,7 @@ export interface ProductDetail {
   weight: number;
   thickness: string;
   finishId: number;
-  kind: string;
+  kind: { value: string };
   notes: string;
   specialInstruction: string;
   disclaimer: string;
@@ -333,6 +333,9 @@ export interface InventoryProduct {
   updatedAt: Date;
   status: InventoryProductStatus;
   bin: Bin;
+  cartItem?: {
+    id: number;
+  };
 }
 
 export enum SlabStatus {

@@ -6,6 +6,7 @@ import { ProductsService } from './services/ProductsService.ts';
 import { VendorService } from './services/VendorService.ts';
 import { CustomersService } from './services/CustomersService.ts';
 import { SalesOrderService } from './services/SalesOrderService.ts';
+import { CartService } from './services/CartService.ts';
 
 // Service registry to provide centralized access to all API services
 export class ServiceRegistry {
@@ -18,6 +19,7 @@ export class ServiceRegistry {
   public readonly vendors: VendorService;
   public readonly customers: CustomersService;
   public readonly sales: SalesOrderService;
+  public readonly cart: CartService;
   private constructor() {
     // Initialize all services with the shared singleton API client
     this.auth = new AuthService(apiClient);
@@ -27,6 +29,7 @@ export class ServiceRegistry {
     this.vendors = new VendorService(apiClient);
     this.customers = new CustomersService(apiClient);
     this.sales = new SalesOrderService(apiClient);
+    this.cart = new CartService(apiClient);
   }
 
   public static getInstance(): ServiceRegistry {

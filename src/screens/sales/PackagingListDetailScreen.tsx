@@ -68,7 +68,7 @@ export interface PackagingListDetailData {
             };
             soLocation: {
                 id: number;
-                location: string;
+                locationName: string;
             };
         };
     };
@@ -192,7 +192,7 @@ const PackagingListDetailScreen: React.FC<PackagingListDetailScreenProps> = prop
         },
         {
             label: 'SO Location',
-            value: data.loadingOrder?.salesOrder?.soLocation?.location,
+            value: data.loadingOrder?.salesOrder?.soLocation?.locationName,
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {

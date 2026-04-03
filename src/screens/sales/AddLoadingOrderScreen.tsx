@@ -73,7 +73,7 @@ export interface SalesOrderForLOData {
     };
     soLocation: {
         id: number;
-        location: string;
+        locationName: string;
     };
     products: Array<{
         id: number;
@@ -93,7 +93,7 @@ export interface SalesOrderForLOData {
                     warehouse: {
                         location: {
                             id: number;
-                            location: string;
+                            locationName: string;
                         };
                     };
                 };
@@ -468,7 +468,7 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                         </YStack>
                         <YStack flex={1} minWidth={150}>
                             <FormFieldWrapper label="SO Location">
-                                <FormTextInput value={data.soLocation.location} onChange={() => { }} disabled />
+                                <FormTextInput value={data.soLocation.locationName} onChange={() => { }} disabled />
                             </FormFieldWrapper>
                         </YStack>
                         <YStack flex={1} minWidth={150}>

@@ -80,7 +80,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = props => {
         },
         {
             label: 'SO Location',
-            value: data.salesOrder.soLocation.location,
+            value: data.salesOrder.soLocation.locationName,
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {

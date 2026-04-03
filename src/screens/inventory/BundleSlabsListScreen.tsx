@@ -9,8 +9,11 @@ import { ScrollView, Switch, View } from 'react-native';
 import Card from '../../components/ui/Card.tsx';
 import Container from '../../components/ui/Container.tsx';
 import { createShortForm } from '../../utils/CommonUtility.ts';
-import StatusBadge from '../../components/ui/StatusBadge.tsx';
+import StatusBadge, { StatusBadgeStatus } from '../../components/ui/StatusBadge.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
+import { services } from '../../network';
+import { showErrorToast } from '../../utils';
+import { TouchableOpacity } from 'react-native';
 
 export type BundleSlabsListScreenProps = ScreenProps<{
   bundleId: string;
@@ -41,7 +44,7 @@ export const BundleSlabsListScreen: React.FC<BundleSlabsListScreenProps> = props
     }
   };
 
-  const statusTxt = (status: SlabStatus) => {
+  const statusTxt = (status: SlabStatus): StatusBadgeStatus => {
     switch (status) {
       case 'INITIATE':
         return 'info';
@@ -52,7 +55,7 @@ export const BundleSlabsListScreen: React.FC<BundleSlabsListScreenProps> = props
       case 'SOLD':
         return 'error';
       default:
-        return status;
+        return 'info';
     }
   };
 
@@ -102,16 +105,18 @@ export const BundleSlabsListScreen: React.FC<BundleSlabsListScreenProps> = props
 
   return (
     <View style={{ flex: 1 }}>
-      <View
+      <TouchableOpacity
         key={inventory.id.toString()}
-        style={{
-          backgroundColor: theme.colors.surface,
-          padding: theme.spacing.sm,
-          ...theme.shadows.md,
-        }}
-        onClick={() => {
+        activeOpacity={0.9}
+        onPress={() => {
           NavigationService.navigate(ScreenId.PRODUCT_DETAIL, { productId: inventory.id });
         }}>
+        <View
+          style={{
+            backgroundColor: theme.colors.surface,
+            padding: theme.spacing.sm,
+            ...theme.shadows.md,
+          }}>
         <View
           style={{
             flexDirection: 'row',
@@ -144,7 +149,8 @@ export const BundleSlabsListScreen: React.FC<BundleSlabsListScreenProps> = props
             value={inventory.group?.name ?? 'NA'}
           />
         </View>
-      </View>
+        </View>
+      </TouchableOpacity>
       <Container>
         <Heading5>Slabs in Bundle - {bundleId}</Heading5>
       </Container>
@@ -215,7 +221,7 @@ export const BundleSlabsListScreen: React.FC<BundleSlabsListScreenProps> = props
               <LabelValue
                 fullWidth={false}
                 label={'Warehouse:'}
-                value={slab?.inventoryProduct?.bin?.warehouse?.location?.location}
+                value={slab?.inventoryProduct?.bin?.warehouse?.location?.locationName}
               />
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <BodyText style={{ marginRight: theme.spacing.sm }}>On Hold</BodyText>

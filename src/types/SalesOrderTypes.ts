@@ -108,7 +108,7 @@ export enum Stage {
 
 export interface SoLocation {
   id: number;
-  location: string;
+  locationName: string;
 }
 
 export enum Status {

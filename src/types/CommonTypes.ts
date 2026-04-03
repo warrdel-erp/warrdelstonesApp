@@ -1,6 +1,5 @@
-import { PaginationData } from './InventoryTypes.ts';
-import { Customers } from './CustomerTypes.ts';
 import { ClientUsers } from '../network/services/AuthService.ts';
+import { PaginationData } from './InventoryTypes.ts';
 
 export interface BaseResponse {
   success: boolean;
@@ -27,7 +26,7 @@ export interface LocationsResponse extends BaseResponse {
 
 export interface Location {
   id: number;
-  location: string;
+  locationName: string;
   contactName: string;
   contactNumber: string;
   contactMail: string;

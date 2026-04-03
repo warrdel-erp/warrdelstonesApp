@@ -9,6 +9,9 @@ import { ActionMenuItem } from '../ui/ActionMenu';
 import CardWithHeader from '../ui/CardWithHeader';
 import DetailGridRenderer from '../ui/DetailGridRenderer';
 import { StatusBadge } from '../ui/StatusBadge';
+import InventoryCartAction from './InventoryCartAction';
+import ActionMenu from '../ui/ActionMenu';
+import { MoreVertical } from '@tamagui/lucide-icons';
 
 export interface InventoryProductCardProps {
     product: InventoryProduct & {
@@ -110,7 +113,7 @@ export const InventoryProductCard: React.FC<InventoryProductCardProps> = ({
                 fontWeight="normal"
                 color="#9CA3AF"
                 style={{ fontFamily: FontConfig.Regular }}>
-                {' '}| {product.bin.name} | {product.bin.warehouse.location.location}
+                {' '}| {product.bin.name} | {product.bin.warehouse.location.locationName}
             </Text>
         </XStack>
     );
@@ -149,12 +152,35 @@ export const InventoryProductCard: React.FC<InventoryProductCardProps> = ({
         },
     ];
 
+    // Header actions - Cart button + Kebab menu
+    const customActions = (
+        <XStack alignItems="center" gap="$3">
+            <InventoryCartAction 
+                product={product as any} 
+                onSuccess={() => {
+                    // Logic to refresh or update local state if needed
+                    console.log('Cart action successful');
+                }} 
+            />
+            <ActionMenu
+                actions={cardActions}
+                trigger={
+                    <XStack
+                        padding={4}
+                        borderRadius={8}>
+                        <MoreVertical size={22} color="#6B7280" />
+                    </XStack>
+                }
+            />
+        </XStack>
+    );
+
     // Data grid items
     const dataGridItems = [
         {
             label: 'BL-BN-SN',
             value: `${slab?.block || '-'}-${slab?.lot || '-'}-${slab?.slabNumber || '-'}`,
-            width: '30%',
+            width: '28%',
         },
         {
             label: 'Barcode',
@@ -201,7 +227,7 @@ export const InventoryProductCard: React.FC<InventoryProductCardProps> = ({
         <CardWithHeader
             badges={cardBadges}
             title={cardTitle}
-            actions={cardActions}
+            customActions={customActions}
             style={style}
             bodyGap={0}>
 

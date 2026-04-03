@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useAppDispatch, useAppState, useAuthState } from '../store/hooks.ts';
-import theme, { textStyles } from '../theme';
-import TextInput from './ui/TextInput.tsx';
 import { useScreenContext } from '../context/ScreenContext.tsx';
-import IconButton from './ui/IconButton.tsx';
-import { Caption } from './ui';
 import NavigationService from '../navigation/NavigationService';
 import { ScreenId, StackId } from '../navigation/navigationConstants';
+import { useAppState, useAuthState } from '../store/hooks.ts';
+import theme, { textStyles } from '../theme';
+import { Caption } from './ui';
+import IconButton from './ui/IconButton.tsx';
+import TextInput from './ui/TextInput.tsx';
 
 interface HomeScreenHeaderProps {
   navigation: any;
@@ -22,6 +22,7 @@ export const HomeScreenHeader: React.FC<HomeScreenHeaderProps> = props => {
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
   const { actions } = useScreenContext();
+
   const handleMenuPress = () => {
     props.navigation.openDrawer();
   };
@@ -53,7 +54,6 @@ export const HomeScreenHeader: React.FC<HomeScreenHeaderProps> = props => {
         <TouchableOpacity style={styles.iconButton} onPress={handleMenuPress} activeOpacity={0.7}>
           <Icon name="menu" size={24} color={theme.colors.white} />
         </TouchableOpacity>
-        )
       </View>
 
       {/*{!searching && (*/}
@@ -130,7 +130,7 @@ export const HomeScreenHeader: React.FC<HomeScreenHeaderProps> = props => {
               color={theme.colors.text.onPrimary}
               ellipsizeMode={'tail'}
               numberOfLines={1}>
-              {selectedLocation?.location}
+              {selectedLocation?.locationName}
             </Caption>
             <Icon name={'keyboard-arrow-down'} color={theme.colors.white} size={20} />
           </TouchableOpacity>

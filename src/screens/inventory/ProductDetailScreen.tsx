@@ -1,22 +1,24 @@
 import React, { useEffect } from 'react';
-import { Dimensions, View } from 'react-native';
-import BaseScreen from '../../components/ui/BaseScreen.tsx';
-import { Heading4, Heading5, ImageLoader, LabelValue } from '../../components/ui';
-import theme from '../../theme';
-import Card from '../../components/ui/Card.tsx';
-import { ProductDetail, ProductDetailResponse } from '../../types/InventoryTypes.ts';
-import { showErrorToast } from '../../utils';
-import { services } from '../../network';
-import { ScreenProps } from '../../types/NavigationTypes.ts';
-import Container from '../../components/ui/Container.tsx';
-import Geocoder from 'react-native-geocoder';
+import { Dimensions } from 'react-native';
 import Config from 'react-native-config';
+import Geocoder from 'react-native-geocoder';
+import { XStack, YStack, getTokens, useTheme } from 'tamagui';
+import { Heading, ImageLoader } from '../../components/ui';
+import BaseScreen from '../../components/ui/BaseScreen.tsx';
+import CardWithHeader from '../../components/ui/CardWithHeader';
+import DetailGridRenderer from '../../components/ui/DetailGridRenderer';
 import IconButton from '../../components/ui/IconButton.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
+import { services } from '../../network';
+import { ProductDetail, ProductDetailResponse } from '../../types/InventoryTypes.ts';
+import { ScreenProps } from '../../types/NavigationTypes.ts';
+import { showErrorToast } from '../../utils';
 
 export type ProductDetailScreenProps = ScreenProps<{ productId: number }>;
 const ProductDetailScreen: React.FC<ProductDetailScreenProps> = props => {
   const productId = props.route.params?.productId;
+  const tamaguiTheme = useTheme();
+  const tokens = getTokens();
   const [productDetails, setProductDetails] = React.useState<ProductDetailResponse | undefined>(
     undefined,
   );
@@ -66,183 +68,194 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = props => {
 
   const renderProductDetails = (productDetail: ProductDetail) => {
     return (
-      <Container
-        padding={'sm'}
-        style={{ gap: theme.spacing.md, backgroundColor: theme.colors.background }}>
-        <Card key={productDetail.id.toString()} style={{ backgroundColor: theme.colors.surface }}>
-          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+      <YStack
+        padding={tokens.space[2].val}
+        gap={tokens.space[4].val}
+        backgroundColor={tamaguiTheme.background?.val}>
+        <CardWithHeader
+          title={
+            <Heading
+              level={4}
+              icon="Package"
+              iconColor={tamaguiTheme.primary?.val}
+              subheading={`from ${productDetail.origin?.name ?? '--'}`}>
+              {productDetail.name}
+            </Heading>
+          }
+          customActions={
+            <XStack gap={tokens.space[2].val}>
+              <IconButton
+                iconName={'share'}
+                size={'extraSmall'}
+                variant={'plain'}
+                outlineColor={tamaguiTheme.primary?.val}
+                onPress={() => { }}
+              />
+              <IconButton
+                iconName={'edit'}
+                size={'extraSmall'}
+                variant={'plain'}
+                outlineColor={tamaguiTheme.primary?.val}
+                onPress={() => { }}
+              />
+              <IconButton
+                iconName={'print'}
+                size={'extraSmall'}
+                variant={'plain'}
+                outlineColor={tamaguiTheme.primary?.val}
+                onPress={() => { }}
+              />
+              <IconButton
+                iconName={'stacked-bar-chart'}
+                size={'extraSmall'}
+                variant={'plain'}
+                outlineColor={tamaguiTheme.primary?.val}
+                onPress={() => { }}
+              />
+            </XStack>
+          }>
+          <XStack gap={tokens.space[4].val}>
             <ImageLoader
               showLoadingIndicator={false}
               source={
                 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiHrQZIt3akt3HRkbXTcdtFRMnLNIwI7_0dQ&s'
               }
+              width={100}
+              height={100}
             />
-            <View style={{ flexDirection: 'row', flex: 1, alignContent: 'space-between' }}>
-              <View>
-                <Heading4>{productDetail.name}</Heading4>
-                <LabelValue label={'Kind:'} value={productDetail.kind} />
-                <LabelValue label={'Category:'} value={productDetail.category?.name ?? '--'} />
-                <LabelValue label={'Subcategory:'} value={productDetail.subCategory.name} />
-                <LabelValue label={'Color:'} value={productDetail.baseColor?.name ?? 'NA'} />
-              </View>
-              <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                <IconButton
-                  iconName={'share'}
-                  size={'extraSmall'}
-                  variant={'plain'}
-                  outlineColor={theme.colors.primary}
-                  onPress={() => {}}
-                />
-                <IconButton
-                  iconName={'edit'}
-                  size={'extraSmall'}
-                  variant={'plain'}
-                  outlineColor={theme.colors.primary}
-                  onPress={() => {}}
-                />
-                <IconButton
-                  iconName={'print'}
-                  size={'extraSmall'}
-                  variant={'plain'}
-                  outlineColor={theme.colors.primary}
-                  onPress={() => {}}
-                />
-                <IconButton
-                  iconName={'stacked-bar-chart'}
-                  size={'extraSmall'}
-                  variant={'plain'}
-                  outlineColor={theme.colors.primary}
-                  onPress={() => {}}
-                />
-              </View>
-            </View>
-          </View>
-        </Card>
+            <DetailGridRenderer
+              containerProps={{ flex: 1 }}
+              items={[
+                { label: 'Kind', value: productDetail.kind?.value, width: '45%' },
+                { label: 'Category', value: productDetail.category?.name ?? '--', width: '45%' },
+                { label: 'Subcategory', value: productDetail.subCategory.name, width: '45%' },
+                { label: 'Color', value: productDetail.baseColor?.name ?? 'NA', width: '45%' },
+              ]}
+              gap={tokens.space[2].val}
+            />
+          </XStack>
+        </CardWithHeader>
 
-        <Card>
-          <View>
-            <LabelValue
-              label={'GL Inventory Link Account:'}
-              value={`${productDetail.inventoryLinkAccount?.code} - ${productDetail.inventoryLinkAccount?.name}`}
-            />
-            <LabelValue
-              label={'GL Income Account:'}
-              value={`${productDetail.incomeAccount?.code} - ${productDetail.incomeAccount?.name}`}
-            />
-            <LabelValue
-              label={'GL Cost of Goods Sold Account:'}
-              value={`${productDetail.costOfGoodsAccount?.code} - ${productDetail.costOfGoodsAccount?.name}`}
-            />
-          </View>
-        </Card>
-        <View style={{ gap: theme.spacing.xs }}>
-          <Heading5>Selling Price</Heading5>
-          <Card>
-            <View style={{ flexDirection: 'row' }}>
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                label={'Single Slab Price:'}
-                value={`${productDetail.singleUnitPrice ?? '-'}`}
-              />
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                alignment={'right'}
-                label={'Bundle Price:'}
-                value={`${productDetail.bundlePrice}`}
-              />
-            </View>
-            <View style={{ flexDirection: 'row' }}>
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                label={'Avg. Landed Cost:'}
-                value={`${(Number(productDetail.avgLandedCost ?? '0') * 144).toFixed(2) ?? '-'}`}
-              />
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                alignment={'right'}
-                label={'Last Landed Cost:'}
-                value={`${productDetail.avgLandedCost ?? 'NA'}`}
-              />
-            </View>
-            <View style={{ flexDirection: 'row' }}>
-              <LabelValue containerStyle={{ flex: 1 }} label={'Last FOB Cost:'} value={`NA`} />
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                alignment={'right'}
-                label={'FOB Cost:'}
-                value={`NA`}
-              />
-            </View>
-          </Card>
-        </View>
+        <CardWithHeader title="GL Accounts">
+          <DetailGridRenderer
+            items={[
+              {
+                label: 'Inventory Link Account',
+                value: `${productDetail.inventoryLinkAccount?.code} - ${productDetail.inventoryLinkAccount?.name}`,
+                width: '45%',
+              },
+              {
+                label: 'Income Account',
+                value: `${productDetail.incomeAccount?.code} - ${productDetail.incomeAccount?.name}`,
+                width: '45%',
+              },
+              {
+                label: 'Cost of Goods Sold Account',
+                value: `${productDetail.costOfGoodsAccount?.code} - ${productDetail.costOfGoodsAccount?.name}`,
+                width: '45%',
+              },
+            ]}
+          />
+        </CardWithHeader>
 
-        <View style={{ gap: theme.spacing.xs }}>
-          <Heading5>Inventory Balance</Heading5>
-          <Card>
-            <View style={{ flexDirection: 'row' }}>
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                valueStyle={{ color: theme.colors.status.info }}
-                label={'In Stock:'}
-                value={`${productDetail?.inventoryBalance?.inStock[0]?.count || 0} Slabs`}
-              />
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                alignment={'right'}
-                label={'Area:'}
-                value={`${productDetail?.inventoryBalance?.inStock[0]?.area || 0} ${productDetail.uom}`}
-              />
-            </View>
-            <View style={{ flexDirection: 'row' }}>
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                valueStyle={{ color: theme.colors.status.warning }}
-                label={'Slabs on hold:'}
-                value={`${productDetail?.inventoryBalance?.allocatedHold[0]?.count || 0} Slabs`}
-              />
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                alignment={'right'}
-                label={'Area:'}
-                value={`${productDetail?.inventoryBalance?.allocatedHold[0]?.area || 0} ${productDetail.uom}`}
-              />
-            </View>
-            <View style={{ flexDirection: 'row' }}>
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                valueStyle={{ color: theme.colors.status.success }}
-                label={'Available Slabs:'}
-                value={`${productDetail?.inventoryBalance?.available[0]?.count || 0} Slabs`}
-              />
-              <LabelValue
-                containerStyle={{ flex: 1 }}
-                alignment={'right'}
-                label={'Area:'}
-                value={`${productDetail?.inventoryBalance?.available[0]?.area || 0} ${productDetail.uom}`}
-              />
-            </View>
-            <LabelValue label={'Weight:'} value={`${productDetail?.weight ?? 'NA'}`} />
-            <LabelValue label={'Thickness:'} value={`${productDetail?.thickness ?? 'NA'}`} />
-          </Card>
-        </View>
+        <CardWithHeader title="Selling Price">
+          <DetailGridRenderer
+            items={[
+              {
+                label: 'Single Slab Price',
+                value: `${productDetail.singleUnitPrice ?? '-'}`,
+                width: '45%',
+              },
+              {
+                label: 'Bundle Price',
+                value: `${productDetail.bundlePrice}`,
+                width: '45%',
+              },
+              {
+                label: 'Avg. Landed Cost',
+                value: `${(Number(productDetail.avgLandedCost ?? '0') * 144).toFixed(2) ?? '-'}`,
+                width: '45%',
+              },
+              {
+                label: 'Last Landed Cost',
+                value: `${productDetail.avgLandedCost ?? 'NA'}`,
+                width: '45%',
+              },
+              {
+                label: 'Last FOB Cost',
+                value: 'NA',
+                width: '45%',
+              },
+              {
+                label: 'FOB Cost',
+                value: 'NA',
+                width: '45%',
+              },
+            ]}
+          />
+        </CardWithHeader>
 
-        <View style={{ gap: theme.spacing.xs }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-            <Heading5>Origin:</Heading5>
-            <Heading4>{productDetail.origin.name ?? '--'}</Heading4>
-          </View>
-          {locationUrl && (
-            <Card style={{ padding: 0 }}>
-              <ImageLoader
-                showLoadingIndicator={false}
-                width={Dimensions.get('window').width - 2 * theme.spacing.sm}
-                height={200}
-                source={locationUrl}
-              />
-            </Card>
-          )}
-        </View>
-      </Container>
+        <CardWithHeader title="Inventory Balance">
+          <DetailGridRenderer
+            items={[
+              {
+                label: 'In Stock',
+                value: `${productDetail?.inventoryBalance?.inStock?.[0]?.count || 0} Slabs`,
+                width: '45%',
+                valueStyle: { color: tamaguiTheme.statusInfo?.val },
+              },
+              {
+                label: 'Area',
+                value: `${productDetail?.inventoryBalance?.inStock?.[0]?.area || 0} ${productDetail.uom}`,
+                width: '45%',
+              },
+              {
+                label: 'Slabs on hold',
+                value: `${productDetail?.inventoryBalance?.allocatedHold?.[0]?.count || 0} Slabs`,
+                width: '45%',
+                valueStyle: { color: tamaguiTheme.statusWarning?.val },
+              },
+              {
+                label: 'Area',
+                value: `${productDetail?.inventoryBalance?.allocatedHold?.[0]?.area || 0} ${productDetail.uom}`,
+                width: '45%',
+              },
+              {
+                label: 'Available Slabs',
+                value: `${productDetail?.inventoryBalance?.available?.[0]?.count || 0} Slabs`,
+                width: '45%',
+                valueStyle: { color: tamaguiTheme.statusSuccess?.val },
+              },
+              {
+                label: 'Area',
+                value: `${productDetail?.inventoryBalance?.available?.[0]?.area || 0} ${productDetail.uom}`,
+                width: '45%',
+              },
+              {
+                label: 'Weight',
+                value: `${productDetail?.weight ?? 'NA'}`,
+                width: '45%',
+              },
+              {
+                label: 'Thickness',
+                value: `${productDetail?.thickness ?? 'NA'}`,
+                width: '45%',
+              },
+            ]}
+          />
+        </CardWithHeader>
+
+        {locationUrl && (
+          <CardWithHeader title={`Origin: ${productDetail.origin.name ?? '--'}`} containerProps={{ padding: 0 }}>
+            <ImageLoader
+              showLoadingIndicator={false}
+              width={Dimensions.get('window').width - 2 * tokens.space[2].val}
+              height={200}
+              source={locationUrl}
+            />
+          </CardWithHeader>
+        )}
+      </YStack>
     );
   };
 
@@ -250,7 +263,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = props => {
     <BaseScreen
       scrollable={true}
       keyboardAware={true}
-      style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      style={{ flex: 1, backgroundColor: tamaguiTheme.background?.val }}>
       {loading && <ScreenLoadingIndicator title={'Loading Details...'} />}
       {!loading && productDetails?.data && renderProductDetails(productDetails.data)}
     </BaseScreen>

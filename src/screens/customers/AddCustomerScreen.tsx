@@ -185,7 +185,7 @@ export const AddCustomerScreen: React.FC = () => {
           <Dropdown
             options={
               allLocations?.map(item => {
-                return { label: item.location, value: item.id, id: item.id };
+                return { label: item.locationName, value: item.id, id: item.id };
               }) ?? []
             }
             mandatory={true}

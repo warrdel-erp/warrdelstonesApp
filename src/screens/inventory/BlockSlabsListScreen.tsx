@@ -1,31 +1,33 @@
 import React, { useEffect } from 'react';
-import { ScreenProps } from '../../types/NavigationTypes.ts';
+import { ScrollView, Switch, View, TouchableOpacity } from 'react-native';
 import { BodyText, Button, Heading4, Heading5, LabelValue } from '../../components/ui';
-import { Block, Inventory, Slab, SlabStatus } from '../../types/InventoryTypes.ts';
-import theme from '../../theme';
-import NavigationService from '../../navigation/NavigationService.ts';
-import { ScreenId } from '../../navigation/navigationConstants.ts';
-import { ScrollView, Switch, View } from 'react-native';
 import Card from '../../components/ui/Card.tsx';
 import Container from '../../components/ui/Container.tsx';
-import { createShortForm } from '../../utils/CommonUtility.ts';
-import StatusBadge from '../../components/ui/StatusBadge.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
+import StatusBadge from '../../components/ui/StatusBadge.tsx';
+import NavigationService from '../../navigation/NavigationService.ts';
+import { ScreenId } from '../../navigation/navigationConstants.ts';
 import { services } from '../../network';
+import theme from '../../theme';
+import { Inventory, Slab, SlabStatus } from '../../types/InventoryTypes.ts';
+import { ScreenProps } from '../../types/NavigationTypes.ts';
+import { createShortForm } from '../../utils/CommonUtility.ts';
+import { showErrorToast } from '../../utils';
+import { StatusBadgeStatus } from '../../components/ui/StatusBadge.tsx';
 
 export type BlockSlabsListScreenProps = ScreenProps<{
   blockId: string,
   inventory: Inventory
 }>
 
-export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props) => {
+export const BlockSlabsListScreen: React.FC<BlockSlabsListScreenProps> = (props) => {
   const { blockId, inventory } = props.route.params
   const [slabs, setSlabs] = React.useState<Slab[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
 
   useEffect(() => {
     setSlabs(inventory.blocks.find(b => b.block === blockId)?.slabs ?? [])
-  }, [blockId]);
+  }, [blockId, inventory.blocks]);
 
 
   const statusLabel = (status: SlabStatus) => {
@@ -43,7 +45,7 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
     }
   }
 
-  const statusTxt = (status: SlabStatus) => {
+  const statusTxt = (status: SlabStatus): StatusBadgeStatus => {
     switch (status) {
       case 'INITIATE':
         return 'info'
@@ -54,7 +56,7 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
       case 'SOLD':
         return 'error'
       default:
-        return status
+        return 'info'
     }
   }
 
@@ -85,7 +87,7 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
     try {
       setLoading(true)
       const response = await services.inventory.addToCart(slabId, !isInCart)
-      if (response.success){
+      if (response.success) {
         const updatedSlabs = slabs.map(slab => {
           if (slab.id === slabId) {
             return { ...slab, inventoryProduct: { ...slab.inventoryProduct, isInCart: !isInCart } };
@@ -105,16 +107,18 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
 
   return (
     <View style={{ flex: 1 }}>
-      <View
+      <TouchableOpacity
         key={inventory.id.toString()}
-        style={{
-          backgroundColor: theme.colors.surface,
-          padding: theme.spacing.sm,
-          ...theme.shadows.md,
-        }}
-        onClick={() => {
+        activeOpacity={0.9}
+        onPress={() => {
           NavigationService.navigate(ScreenId.PRODUCT_DETAIL, { productId: inventory.id });
         }}>
+        <View
+          style={{
+            backgroundColor: theme.colors.surface,
+            padding: theme.spacing.sm,
+            ...theme.shadows.md,
+          }}>
         <View
           style={{
             flexDirection: 'row',
@@ -123,7 +127,7 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
             alignItems: 'baseline',
           }}>
           <Heading4>{inventory.name}</Heading4>
-          <LabelValue containerStyle={{ flex: 1 }} label={'from'} value={inventory.origin} />
+          <LabelValue containerStyle={{ flex: 1 }} label={'from'} value={inventory.origin?.name} />
         </View>
         <View style={{ flexDirection: 'row' }}>
           <LabelValue containerStyle={{ flex: 1 }} label={'Kind:'} value={inventory.kind} />
@@ -147,7 +151,8 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
             value={inventory.group?.name ?? 'NA'}
           />
         </View>
-      </View>
+        </View>
+      </TouchableOpacity>
       <Container>
         <Heading5>Slabs in Block - {blockId}</Heading5>
       </Container>
@@ -193,19 +198,19 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
               <LabelValue
                 fullWidth={false}
                 label={'Landed Cost:'}
-                value={`${Number(slab?.landedUnitCost * 144).toFixed(2)}/${createShortForm(inventory.uom)}`}
+                value={`${Number(slab?.landedUnitCost * 144).toFixed(2)}/${createShortForm(inventory.uom?.code)}`}
               />
               <LabelValue
                 fullWidth={false}
                 label={'Selling Cost:'}
-                value={`${Number(slab?.inventoryProduct?.sellingPrice).toFixed(2)}/${createShortForm(inventory.uom)}`}
+                value={`${Number(slab?.inventoryProduct?.sellingPrice).toFixed(2)}/${createShortForm(inventory.uom?.code)}`}
               />
             </View>
             <View style={{ flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'center' }}>
               <LabelValue
                 fullWidth={false}
                 label={'On hold:'}
-                value={`${slab?.receivingLength} x ${slab?.receivingWidth} = ${((slab?.receivingLength * slab?.receivingWidth) / 144).toFixed(3)} ${createShortForm(inventory.uom)}`}
+                value={`${slab?.receivingLength} x ${slab?.receivingWidth} = ${((slab?.receivingLength * slab?.receivingWidth) / 144).toFixed(3)} ${createShortForm(inventory.uom?.code)}`}
               />
             </View>
             <View
@@ -218,7 +223,7 @@ export const BlockSlabsListScreen: React.FC<BundleSlabsListScreenProps> = (props
               <LabelValue
                 fullWidth={false}
                 label={'Warehouse:'}
-                value={slab?.inventoryProduct?.bin?.warehouse?.location?.location}
+                value={slab?.inventoryProduct?.bin?.warehouse?.location?.locationName}
               />
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <BodyText style={{ marginRight: theme.spacing.sm }}>On Hold</BodyText>

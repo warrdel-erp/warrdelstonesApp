@@ -47,7 +47,7 @@ export interface LoadingOrderForPLData {
         };
         soLocation: {
             id: number;
-            location: string;
+            locationName: string;
         };
     };
     shippingAddress: {
@@ -427,7 +427,7 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                         </YStack>
                         <YStack flex={1} minWidth={150}>
                             <FormFieldWrapper label="SO Location">
-                                <FormTextInput value={data.salesOrder.soLocation.location} onChange={() => { }} disabled />
+                                <FormTextInput value={data.salesOrder.soLocation.locationName} onChange={() => { }} disabled />
                             </FormFieldWrapper>
                         </YStack>
                         <YStack flex={1} minWidth={150}>

@@ -1,9 +1,9 @@
-import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
+import React from 'react';
 import { HomeScreen } from '../../../screens';
-import { ScreenId } from '../../navigationConstants.ts';
-import { createHeaderComponent } from '../../headerFactory.tsx';
 import { TempScreen } from '../../../screens/TempScreen.tsx';
+import { createHeaderComponent } from '../../headerFactory.tsx';
+import { ScreenId } from '../../navigationConstants.ts';
 
 const HomeStack = createStackNavigator();
 

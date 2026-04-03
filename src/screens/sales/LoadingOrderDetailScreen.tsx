@@ -58,7 +58,7 @@ export interface LoadingOrderDetailData {
         };
         soLocation: {
             id: number;
-            location: string;
+            locationName: string;
         };
     };
     shippingAddress: {
@@ -196,7 +196,7 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
         },
         {
             label: 'SO Location',
-            value: data.salesOrder.soLocation.location,
+            value: data.salesOrder.soLocation.locationName,
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {

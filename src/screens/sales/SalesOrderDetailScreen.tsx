@@ -76,7 +76,7 @@ export interface SalesOrderDetail {
     };
     soLocation: {
         id: number;
-        location: string;
+        locationName: string;
         contactName: string;
         contactNumber: string;
         contactMail: string;
@@ -322,7 +322,7 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
     const soLocationDetailItems = [
         {
             label: 'Location',
-            value: salesOrderDetail?.soLocation?.location || '-',
+            value: salesOrderDetail?.soLocation?.locationName || '-',
             icon: <Building2 size={16} color={theme.textSecondary?.val || '#6B7280'} />,
             width: '100%',
             wrapText: true,
