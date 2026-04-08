@@ -1,5 +1,4 @@
 import React from 'react';
-import { TempScreen } from '../screens/TempScreen.tsx';
 import { UserRole, UserRoleValue } from '../types/userTypes';
 import { AccountPayableNavigator } from './stacks/accounting/AccountPayableNavigator.tsx';
 import { AccountReceivableNavigator } from './stacks/accounting/AccountReceivableNavigator.tsx';
@@ -17,13 +16,8 @@ import { CustomersNavigator } from './stacks/initiate/CustomersNavigator.tsx';
 import { ProductsNavigator } from './stacks/initiate/ProductsNavigator.tsx';
 import { ServicesNavigator } from './stacks/initiate/ServicesNavigator.tsx';
 import { SuppliersNavigator } from './stacks/initiate/SuppliersNavigator.tsx';
-import { TrucksNavigator } from './stacks/initiate/TrucksNavigator.tsx';
-import { VendorsNavigator } from './stacks/initiate/VendorsNavigator.tsx';
 import { InventoryNavigator } from './stacks/inventory/InventoryNavigator.tsx';
-import { TransfersNavigator } from './stacks/inventory/TransfersNavigator.tsx';
 import { DeliveriesNavigator } from './stacks/sales/DeliveriesNavigator.tsx';
-import { InvoicesNavigator } from './stacks/sales/InvoicesNavigator.tsx';
-import { ReturnsNavigator } from './stacks/sales/ReturnsNavigator.tsx';
 import { SalesNavigator } from './stacks/sales/SalesNavigator.tsx';
 import { LocationsNavigator } from './stacks/settings/LocationsNavigator.tsx';
 import { PermissionsNavigator } from './stacks/settings/PermissionsNavigator.tsx';
@@ -215,13 +209,13 @@ export const SALES_NAVIGATORS: DrawerMenuItem[] = [
     component: SalesNavigator,
     roles: ALL_ROLES,
   },
-  {
-    id: StackId.INVOICES,
-    title: 'Invoices',
-    icon: 'description',
-    component: InvoicesNavigator,
-    roles: ALL_ROLES,
-  },
+  // {
+  //   id: StackId.INVOICES,
+  //   title: 'Invoices',
+  //   icon: 'description',
+  //   component: InvoicesNavigator,
+  //   roles: ALL_ROLES,
+  // },
   {
     id: StackId.DELIVERIES,
     title: 'Deliveries',
@@ -229,20 +223,20 @@ export const SALES_NAVIGATORS: DrawerMenuItem[] = [
     component: DeliveriesNavigator,
     roles: ALL_ROLES,
   },
-  {
-    id: StackId.RETURNS,
-    title: 'Returns',
-    icon: 'assignment-return',
-    component: ReturnsNavigator,
-    roles: ALL_ROLES,
-  },
-  {
-    id: StackId.SELECTION_SHEET,
-    title: 'Selection Sheet',
-    icon: 'assignment',
-    component: TempScreen,
-    roles: ALL_ROLES,
-  },
+  // {
+  //   id: StackId.RETURNS,
+  //   title: 'Returns',
+  //   icon: 'assignment-return',
+  //   component: ReturnsNavigator,
+  //   roles: ALL_ROLES,
+  // },
+  // {
+  //   id: StackId.SELECTION_SHEET,
+  //   title: 'Selection Sheet',
+  //   icon: 'assignment',
+  //   component: TempScreen,
+  //   roles: ALL_ROLES,
+  // },
 ];
 
 export const INVENTORY_NAVIGATORS: DrawerMenuItem[] = [
@@ -253,13 +247,13 @@ export const INVENTORY_NAVIGATORS: DrawerMenuItem[] = [
     component: InventoryNavigator,
     roles: ALL_ROLES,
   },
-  {
-    id: StackId.TRANSFERS,
-    title: 'Transfers',
-    icon: 'calendar-today',
-    component: TransfersNavigator,
-    roles: ALL_ROLES,
-  },
+  // {
+  //   id: StackId.TRANSFERS,
+  //   title: 'Transfers',
+  //   icon: 'calendar-today',
+  //   component: TransfersNavigator,
+  //   roles: ALL_ROLES,
+  // },
 ];
 
 export const EXPENSES_NAVIGATORS: DrawerMenuItem[] = [
@@ -308,13 +302,13 @@ export const INITIATE_NAVIGATORS: DrawerMenuItem[] = [
     component: CustomersNavigator,
     roles: ALL_ROLES,
   },
-  {
-    id: StackId.VENDORS,
-    title: 'Vendors',
-    icon: 'topic',
-    component: VendorsNavigator,
-    roles: ALL_ROLES,
-  },
+  // {
+  //   id: StackId.VENDORS,
+  //   title: 'Vendors',
+  //   icon: 'topic',
+  //   component: VendorsNavigator,
+  //   roles: ALL_ROLES,
+  // },
   {
     id: StackId.SERVICES,
     title: 'Services',
@@ -322,13 +316,13 @@ export const INITIATE_NAVIGATORS: DrawerMenuItem[] = [
     component: ServicesNavigator,
     roles: ALL_ROLES,
   },
-  {
-    id: StackId.TRUCKS,
-    title: 'Trucks',
-    icon: 'topic',
-    component: TrucksNavigator,
-    roles: ALL_ROLES,
-  },
+  // {
+  //   id: StackId.TRUCKS,
+  //   title: 'Trucks',
+  //   icon: 'topic',
+  //   component: TrucksNavigator,
+  //   roles: ALL_ROLES,
+  // },
 ];
 
 export const ACCOUNTING_NAVIGATORS: DrawerMenuItem[] = [
@@ -541,11 +535,11 @@ export const ADMIN_DRAWER_CONFIG: DrawerMenuItem[] = [
   DASHBOARD_STACK,
   INVENTORY_STACK,
   SALES_STACK,
-  EXPENSES_STACK,
+  // EXPENSES_STACK,
   INITIATE_STACK,
   ACCOUNTING_STACK,
-  SETTINGS_STACK,
-  DEMO_STACK,
+  // SETTINGS_STACK,
+  // DEMO_STACK,
 ];
 
 const ROLE_DRAWER_CONFIGS: Record<UserRoleValue, DrawerMenuItem[]> = {
