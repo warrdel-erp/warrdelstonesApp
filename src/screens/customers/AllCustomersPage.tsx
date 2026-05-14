@@ -1,17 +1,17 @@
+import { useFocusEffect } from '@react-navigation/native';
 import React from 'react';
 import { FlatList, ListRenderItemInfo, View } from 'react-native';
-import { services } from '../../network';
-import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
-import theme from '../../theme';
-import { EmptyList } from '../../components/ui/EmptyList.tsx';
-import { useFocusEffect } from '@react-navigation/native';
-import { showErrorToast } from '../../utils';
 import { Caption, Heading6, LabelValue } from '../../components/ui';
 import Card from '../../components/ui/Card.tsx';
+import { EmptyList } from '../../components/ui/EmptyList.tsx';
+import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import StatusBadge from '../../components/ui/StatusBadge.tsx';
-import { capitalizeWords } from '../../utils/CommonUtility.ts';
+import { services } from '../../network';
 import { CustomersFilter } from '../../network/services/CustomersService.ts';
+import theme from '../../theme';
 import { Customer, Customers } from '../../types/CustomerTypes.ts';
+import { showErrorToast } from '../../utils';
+import { capitalizeWords } from '../../utils/CommonUtility.ts';
 
 export type SupplierPageProps = {
   filter: 'active' | 'inActive' | undefined;
@@ -35,7 +35,7 @@ export const AllCustomersPage: React.FC<SupplierPageProps> = props => {
   useFocusEffect(
     React.useCallback(() => {
       getCustomers({ status: props.filter });
-      return () => {};
+      return () => { };
     }, [props.filter]),
   );
 
@@ -48,7 +48,7 @@ export const AllCustomersPage: React.FC<SupplierPageProps> = props => {
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: theme.spacing.xs }}>
             <Heading6 color={theme.colors.primary}>{customer.name}</Heading6>
-            <Caption>{customer.scope.value ?? '-'}</Caption>
+            <Caption>{customer?.scope?.value ?? '-'}</Caption>
           </View>
           <View
             style={{

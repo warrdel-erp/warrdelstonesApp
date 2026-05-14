@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { theme, textStyles } from '../theme';
 import { useScreenContext } from '../context/ScreenContext';
+import { textStyles, theme } from '../theme';
 
 // Dashboard Custom Header with interactive elements
 export const DashboardHeader: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -30,7 +30,7 @@ export const DashboardHeader: React.FC<{ navigation: any }> = ({ navigation }) =
 
         <View style={styles.centerContent}>
           <Text style={styles.welcomeText}>Welcome back!</Text>
-          <Text style={styles.dashboardTitle}>StoneApp Dashboard</Text>
+          <Text style={styles.dashboardTitle}>Slabflare Dashboard</Text>
         </View>
 
         <View style={styles.rightActions}>

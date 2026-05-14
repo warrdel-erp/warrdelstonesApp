@@ -157,8 +157,8 @@ const FeatureRow: React.FC<{
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState('User@gmail.com');
-  const [password, setPassword] = useState('user');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
   const authActions = useAuthActions();
