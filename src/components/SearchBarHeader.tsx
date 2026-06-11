@@ -6,6 +6,7 @@ import TextInput from './ui/TextInput.tsx';
 import { useScreenContext } from '../context/ScreenContext.tsx';
 import IconButton from './ui/IconButton.tsx';
 import NavigationService from '../navigation/NavigationService.ts';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SearchBarHeaderProps {
   title?: string;
@@ -20,6 +21,7 @@ export const SearchBarHeader: React.FC<SearchBarHeaderProps> = props => {
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
   const { actions } = useScreenContext();
+  const insets = useSafeAreaInsets();
 
   const handleMenuPress = () => {
     props.navigation.openDrawer();
@@ -41,18 +43,13 @@ export const SearchBarHeader: React.FC<SearchBarHeaderProps> = props => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 16 : 0) }]}>
       <View style={styles.leftSection}>
         {!props.showMenuButton ? (
           <TouchableOpacity style={styles.iconButton} onPress={handleBackPress} activeOpacity={0.7}>
             <Icon name="arrow-back" size={24} color={theme.colors.text.onPrimary} />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.iconButton} onPress={handleMenuPress} activeOpacity={0.7}>
-            <Icon name="menu" size={24} color={theme.colors.text.onPrimary} />
-          </TouchableOpacity>
-        )}
-        )
+        ) : null}
       </View>
 
       {!searching && (

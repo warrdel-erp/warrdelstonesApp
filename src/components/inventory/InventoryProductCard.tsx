@@ -113,7 +113,7 @@ export const InventoryProductCard: React.FC<InventoryProductCardProps> = ({
                 fontWeight="normal"
                 color="#9CA3AF"
                 style={{ fontFamily: FontConfig.Regular }}>
-                {' '}| {product.bin.name} | {product.bin.warehouse.location.locationName}
+                {' '}| {product.bin?.name || '--'}
             </Text>
         </XStack>
     );
@@ -155,12 +155,12 @@ export const InventoryProductCard: React.FC<InventoryProductCardProps> = ({
     // Header actions - Cart button + Kebab menu
     const customActions = (
         <XStack alignItems="center" gap="$3">
-            <InventoryCartAction 
-                product={product as any} 
+            <InventoryCartAction
+                product={product as any}
                 onSuccess={() => {
                     // Logic to refresh or update local state if needed
                     console.log('Cart action successful');
-                }} 
+                }}
             />
             <ActionMenu
                 actions={cardActions}

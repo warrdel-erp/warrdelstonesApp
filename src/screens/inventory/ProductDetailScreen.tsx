@@ -128,7 +128,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = props => {
               items={[
                 { label: 'Kind', value: productDetail.kind?.value, width: '45%' },
                 { label: 'Category', value: productDetail.category?.name ?? '--', width: '45%' },
-                { label: 'Subcategory', value: productDetail.subCategory.name, width: '45%' },
+                { label: 'Subcategory', value: productDetail.subCategory?.name ?? '--', width: '45%' },
                 { label: 'Color', value: productDetail.baseColor?.name ?? 'NA', width: '45%' },
               ]}
               gap={tokens.space[2].val}

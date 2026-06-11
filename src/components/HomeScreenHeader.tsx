@@ -51,9 +51,7 @@ export const HomeScreenHeader: React.FC<HomeScreenHeaderProps> = props => {
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <TouchableOpacity style={styles.iconButton} onPress={handleMenuPress} activeOpacity={0.7}>
-          <Icon name="menu" size={24} color={theme.colors.white} />
-        </TouchableOpacity>
+        {/* Menu icon removed as Drawer is no longer used */}
       </View>
 
       {/*{!searching && (*/}

@@ -41,10 +41,11 @@
     "@react-native-community/netinfo": "^11.4.1",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-native/new-app-screen": "0.80.2",
-    "@react-navigation/drawer": "^7.5.5",
-    "@react-navigation/elements": "^2.6.1",
-    "@react-navigation/native": "^7.1.16",
-    "@react-navigation/stack": "^7.4.4",
+    "@react-navigation/bottom-tabs": "^7.18.0",
+    "@react-navigation/drawer": "^7.12.0",
+    "@react-navigation/elements": "^2.9.23",
+    "@react-navigation/native": "^7.3.1",
+    "@react-navigation/stack": "^7.10.3",
     "@reduxjs/toolkit": "^2.8.2",
     "@tamagui/config": "^1.139.2",
     "@tamagui/lucide-icons": "^1.139.2",
@@ -76,6 +77,7 @@
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "tamagui": "^1.139.2",
+    "victory-native": "^41.26.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

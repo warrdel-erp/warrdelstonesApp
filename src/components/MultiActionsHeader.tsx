@@ -7,6 +7,7 @@ import NavigationService from '../navigation/NavigationService';
 import { ScreenId } from '../navigation/navigationConstants';
 import { IconButton, IconButtonProps } from './ui/IconButton.tsx';
 import { useScreenContext } from '../context/ScreenContext.tsx';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface CustomHeaderProps {
   title?: string;
@@ -29,6 +30,7 @@ const MultiActionsHeader: React.FC<CustomHeaderProps> = ({
 }) => {
   const route = useRoute();
   const { actions } = useScreenContext();
+  const insets = useSafeAreaInsets();
 
   // Simplified logic: Show back button everywhere except Home screen
   const shouldShowBackButton = route.name !== ScreenId.HOME;
@@ -48,17 +50,13 @@ const MultiActionsHeader: React.FC<CustomHeaderProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 16 : 0) }]}>
       <View style={styles.leftSection}>
         {shouldShowBackButton ? (
           <TouchableOpacity style={styles.iconButton} onPress={handleBackPress} activeOpacity={0.7}>
             <Icon name="arrow-back" size={24} color={theme.colors.text.onPrimary} />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.iconButton} onPress={handleMenuPress} activeOpacity={0.7}>
-            <Icon name="menu" size={24} color={theme.colors.text.onPrimary} />
-          </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
       <View style={styles.centerSection}>

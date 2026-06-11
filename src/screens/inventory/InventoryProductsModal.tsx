@@ -5,19 +5,21 @@ import { InventoryProductCard } from '../../components/inventory/InventoryProduc
 import AppModal from '../../components/ui/AppModal.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import { services } from '../../network';
-import { InventoryProduct, SiplElement } from '../../types/InventoryTypes.ts';
+import { GetProductBy } from '../../network/services/InventoryService.ts';
+import { InventoryProduct } from '../../types/InventoryTypes.ts';
 import { showErrorToast, showSuccessToast } from '../../utils';
 
-export interface UpdateProductsPricingModalProps {
-  siplElement: SiplElement;
+export interface InventoryProductsModalProps {
+  filter: GetProductBy;
+  title: string;
   visible: boolean;
   onClose: (refreshData: boolean) => void;
 }
 
-export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProps> = (props) => {
+export const InventoryProductsModal: React.FC<InventoryProductsModalProps> = (props) => {
   const tokens = getTokens();
   const theme = useTheme();
-  const { siplElement } = props;
+  const { filter, title } = props;
   const [allSelected, setAllSelected] = React.useState<Boolean>(true);
   const [allInventoryProducts, setAllProducts] = React.useState<InventoryProduct[]>([]);
   const [loading, setLoading] = React.useState<Boolean>(true);
@@ -26,10 +28,10 @@ export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProp
   const [newPrice, setNewPrice] = React.useState<string>('');
 
   useEffect(() => {
-    if (siplElement.id) {
-      getInventoryProducts(siplElement.id)
+    if (filter) {
+      getInventoryProducts(filter)
     }
-  }, [siplElement.id]);
+  }, [JSON.stringify(filter)]);
 
   const updateSellingPrice = async () => {
     try {
@@ -48,9 +50,9 @@ export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProp
     }
   }
 
-  const getInventoryProducts = async (siplId: number) => {
+  const getInventoryProducts = async (byFilter: GetProductBy) => {
     try {
-      const response = await services.inventory.getInventoryProducts({ siplId: siplId });
+      const response = await services.inventory.getInventoryProducts(byFilter);
       if (response.success) {
         setAllProducts(response.data?.data ?? [])
         setSelectedProducts(response.data?.data.map(product => product.id) ?? [])
@@ -98,46 +100,9 @@ export const UpdateProductsPricingModal: React.FC<UpdateProductsPricingModalProp
       onClose={() => props.onClose(false)}
       fullScreen={true}
       renderInStatusBar={true}
-      title={`Inventory Products - ${siplElement.invoiceCode}`}>
+      title={title}>
       {loading && <ScreenLoadingIndicator title={'Loading Products...'} />}
 
-      {/* <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: theme.spacing.md,
-        }}>
-        <CheckBox
-          title={'Select All'}
-          checked={allSelected.valueOf()}
-          onChange={(_: Boolean) => toggleSelection()}
-        />
-        <BodyText>{`${selectedProducts.length} of ${allInventoryProducts.length} products selected`}</BodyText>
-      </View> */}
-      {/* <Separator /> */}
-      {/* <View
-        style={{
-          flexDirection: 'row',
-          paddingHorizontal: theme.spacing.sm,
-          alignItems: 'center',
-          gap: theme.spacing.sm,
-        }}>
-        <TextInput
-          containerStyle={{ flex: 1 }}
-          value={newPrice}
-          onChangeText={txt => setNewPrice(txt)}
-          placeholder={'Enter new price'}
-          inputType={'number'}
-        />
-        <Button
-          title={'Update'}
-          onPress={updateSellingPrice}
-          loading={!!settingPrice}
-          variant={'primary'}
-          disabled={newPrice.length === 0 || selectedProducts.length === 0}
-        />
-      </View> */}
       <KeyboardAwareScrollView
         contentContainerStyle={{
           gap: tokens.space[2].val,

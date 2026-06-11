@@ -1,7 +1,6 @@
 import React from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
 import { ScreenProvider } from '../context/ScreenContext';
-import CustomDrawerContent from '../components/CustomDrawerContent';
 import { useAuthContext } from '../context/AuthContext';
 import {
   DrawerMenuItem,
@@ -9,21 +8,25 @@ import {
 } from './navigationConstants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import theme from '../theme';
-import { Platform } from 'react-native';
+import { BottomTabNavigator } from './BottomTabNavigator';
 
-const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
 
-const mapDrawerItemToNavigator: React.Component = (item: DrawerMenuItem) => {
-  return <Drawer.Screen key={item.id} name={item.id} component={item.component!!} />;
+const mapItemToNavigator = (item: DrawerMenuItem) => {
+  return <Stack.Screen key={item.id} name={item.id} component={item.component!!} />;
 };
 
-const registeredNavigators: React.Component[] = ADMIN_DRAWER_CONFIG.map(item => {
+const registeredNavigators: any[] = [];
+ADMIN_DRAWER_CONFIG.forEach(item => {
   if (item.component) {
-    return mapDrawerItemToNavigator(item);
+    registeredNavigators.push(mapItemToNavigator(item));
   } else if ((item.children?.length || 0) > 0) {
-    return item.children?.flatMap(child => mapDrawerItemToNavigator(child));
+    item.children?.forEach(child => {
+      registeredNavigators.push(mapItemToNavigator(child));
+    });
   }
 });
+
 const StaffNavigator: React.FC = () => {
   const { authState } = useAuthContext();
   const insets = useSafeAreaInsets();
@@ -34,18 +37,17 @@ const StaffNavigator: React.FC = () => {
 
   return (
     <ScreenProvider>
-      <Drawer.Navigator
-        drawerContent={props => <CustomDrawerContent {...props} />}
+      <Stack.Navigator
         screenOptions={{
-          sceneStyle: {
-            backgroundColor: theme.colors.primaryDark,
-            paddingTop: insets.top,
-            paddingBottom: Platform.OS === 'ios' ? 0 : insets.bottom,
-          },
           headerShown: false,
+          cardStyle: { backgroundColor: theme.colors.background },
         }}>
+        {/* Main App interface with Bottom Tabs */}
+        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+        
+        {/* Register all individual module stacks previously in the drawer */}
         {registeredNavigators}
-      </Drawer.Navigator>
+      </Stack.Navigator>
     </ScreenProvider>
   );
 };

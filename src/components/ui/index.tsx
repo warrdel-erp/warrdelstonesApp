@@ -33,11 +33,12 @@ export { default as TextInput } from './TextInput';
 // Export all Typography components
 export {
   BodyText,
-  Caption, Heading1,
+  Heading1,
   Heading2,
   Heading3,
   Heading4,
   Heading5,
-  Heading6
+  Heading6,
+  Caption
 } from './Typography';
 

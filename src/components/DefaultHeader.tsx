@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { theme, textStyles } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import NavigationService from '../navigation/NavigationService';
 import { ScreenId } from '../navigation/navigationConstants';
+import { AppContextSelector } from './AppContextSelector';
+import { useAppState } from '../store/hooks';
+import { Caption } from './ui';
 
 export interface CustomHeaderProps {
   title?: string;
@@ -27,6 +31,9 @@ const DefaultHeader: React.FC<CustomHeaderProps> = ({
   onBackPress,
 }) => {
   const route = useRoute();
+  const insets = useSafeAreaInsets();
+  const { selectedLocation } = useAppState();
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Simplified logic: Show back button everywhere except Home screen
   const showMenuIcon = showMenuButton || route.name === ScreenId.HOME;
@@ -47,21 +54,17 @@ const DefaultHeader: React.FC<CustomHeaderProps> = ({
 
   // If custom component is provided, render it instead
   if (customComponent) {
-    return <View style={styles.container}>{customComponent}</View>;
+    return <View style={[styles.container, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 16 : 0) }]}>{customComponent}</View>;
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 16 : 0) }]}>
       <View style={styles.leftSection}>
         {!showMenuIcon ? (
           <TouchableOpacity style={styles.iconButton} onPress={handleBackPress} activeOpacity={0.7}>
             <Icon name="arrow-back" size={24} color={theme.colors.white} />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.iconButton} onPress={handleMenuPress} activeOpacity={0.7}>
-            <Icon name="menu" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
       <View style={styles.centerSection}>
@@ -69,9 +72,33 @@ const DefaultHeader: React.FC<CustomHeaderProps> = ({
         {subtitle && <Text style={styles.titleText}>{subtitle}</Text>}
       </View>
 
-      <View style={styles.rightSection}>
-        {rightComponent || <View style={styles.iconButton} />}
+      <View style={[styles.rightSection, !rightComponent && { width: 'auto' }]}>
+        {rightComponent || (
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderWidth: 1,
+              maxWidth: 100,
+              width: 100,
+              borderColor: theme.colors.white,
+              padding: theme.spacing.xs,
+              borderRadius: theme.borderRadius.md,
+            }}
+            onPress={() => setShowLocationModal(true)}>
+            <Caption
+              style={{ flex: 1 }}
+              color={theme.colors.text.onPrimary}
+              ellipsizeMode={'tail'}
+              numberOfLines={1}>
+              {selectedLocation?.locationName || 'Location'}
+            </Caption>
+            <Icon name={'keyboard-arrow-down'} color={theme.colors.white} size={20} />
+          </TouchableOpacity>
+        )}
       </View>
+
+      <AppContextSelector visible={showLocationModal} onClose={() => setShowLocationModal(false)} />
     </View>
   );
 };

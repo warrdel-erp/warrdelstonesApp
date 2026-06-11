@@ -1,15 +1,15 @@
 import React from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import DrawerNavigator from './DrawerNavigator.tsx';
+import StaffNavigator from './StaffNavigator';
 
 function MainAppNavigator() {
-  const { loading, authState } = useAuthContext();
+  const { loading } = useAuthContext();
 
   if (loading) {
     return null;
   }
 
-  return <DrawerNavigator />;
+  return <StaffNavigator />;
 }
 
 export default MainAppNavigator;

@@ -1,19 +1,12 @@
 import React, { useCallback } from 'react';
-import {
-  StyleSheet
-} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import BaseScreen from '../../components/ui/BaseScreen.tsx';
 import Tabs, { TabItem } from '../../components/ui/Tabs.tsx';
 import theme from '../../theme';
-import { InventoryBySiplPage } from './InventoryBySiplPage.tsx';
-
+import { InventoryListPage } from './InventoryListPage.tsx';
 
 const TABS: TabItem[] = [
-  {
-    id: 'SIPL',
-    label: 'SIPL',
-  },
   {
     id: 'BUNDLE',
     label: 'Bundle',
@@ -21,6 +14,10 @@ const TABS: TabItem[] = [
   {
     id: 'BLOCK',
     label: 'Block',
+  },
+  {
+    id: 'SIPL',
+    label: 'SIPL',
   }
 ]
 
@@ -36,30 +33,37 @@ const InventoryScreen: React.FC = () => {
     setCurrentTab(e.nativeEvent.position);
   }, []);
 
-
   return (
     <BaseScreen scrollable={false} keyboardAware={false} style={{ flex: 1 }}>
-      <Tabs
-        variant={'pill-outlined'}
-        style={{ padding: theme.spacing.sm, paddingHorizontal: theme.spacing.sm }}
-        scrollable={false}
-        tabs={TABS}
-        selectedIndex={currentTab}
-        onTabPress={handleTabPress} />
+      <View style={{ padding: theme.spacing.sm }}>
+        <Tabs
+          variant={'pill-outlined'}
+          scrollable={false}
+          tabs={TABS}
+          selectedIndex={currentTab}
+          onTabPress={handleTabPress} 
+        />
+      </View>
 
       <PagerView
         ref={pagerViewRef}
         style={{ flex: 1 }}
         onPageSelected={handlePageSelected}
         initialPage={currentTab}>
-        <InventoryBySiplPage />
-        {/* <InventoryByBundlePage />
-        <InventoryByBlockPage /> */}
+        
+        <View key="0" style={{ flex: 1 }}>
+          <InventoryListPage type="BUNDLE" />
+        </View>
+        <View key="1" style={{ flex: 1 }}>
+          <InventoryListPage type="BLOCK" />
+        </View>
+        <View key="2" style={{ flex: 1 }}>
+          <InventoryListPage type="SIPL" />
+        </View>
+
       </PagerView>
     </BaseScreen>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default InventoryScreen;
