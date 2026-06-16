@@ -14,55 +14,57 @@ import FormFieldWrapper from '../../components/ui/FormFieldWrapper';
 import FormTextArea from '../../components/ui/FormTextArea';
 import FormTextInput from '../../components/ui/FormTextInput';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator';
-import SelectDropdown from '../../components/ui/SelectDropdown';
 import { services } from '../../network';
 import { ScreenProps } from '../../types/NavigationTypes';
 import { showErrorToast, showSuccessToast } from '../../utils';
 
-export interface SalesOrderForLOData {
-    tax: {
-        id: number;
-        code: string;
-        label: string;
-        value: number;
-        stateTax: number;
-    };
+export interface PackagingListForLOData {
     id: number;
-    clientSoNumber: number;
-    soDate: string;
-    customerPo: string;
-    status: string;
+    code: string;
+    plDate: string;
+    expDeliveryDate: string;
     deliveryType: string;
     deliveryNotes: string;
+    internalNote: string;
     paymentTermId: number | null;
-    customerPoDate: string;
-    expDeliveryDate: string;
-    accountId: number;
     customerId: number;
     shippingAddressId: number;
-    clientId: number;
-    soLocationId: number;
-    taxId: number;
-    customer: {
+    salesOrderId: number;
+    salesOrder: {
         id: number;
-        name: string;
-        contactName: string;
-        printName: string;
-        primaryPhoneNumber: string;
-        email: string;
-        accEmail: string;
-        paymentTerm?: {
+        clientSoNumber: number;
+        tax: {
             id: number;
-            value: string;
+            code: string;
+            label: string;
+            value: number;
+            stateTax: number;
         };
-        addresses: Array<{
+        customer: {
             id: number;
-            address: string;
+            name: string;
             contactName: string;
-            contactEmail: string;
-            contactNumber: string;
-            addressType: string;
-        }>;
+            printName: string;
+            primaryPhoneNumber: string;
+            email: string;
+            accEmail: string;
+            paymentTerm?: {
+                id: number;
+                value: string;
+            };
+            addresses: Array<{
+                id: number;
+                address: string;
+                contactName: string;
+                contactEmail: string;
+                contactNumber: string;
+                addressType: string;
+            }>;
+        };
+        soLocation: {
+            id: number;
+            locationName: string;
+        };
     };
     shippingAddress: {
         id: number;
@@ -70,10 +72,6 @@ export interface SalesOrderForLOData {
         contactName: string;
         contactEmail: string;
         contactNumber: string;
-    };
-    soLocation: {
-        id: number;
-        locationName: string;
     };
     products: Array<{
         id: number;
@@ -84,6 +82,10 @@ export interface SalesOrderForLOData {
             unitPrice: string;
             taxPercentage: number;
             receivingAreaSqFt: number;
+            plRemeasureLength?: number;
+            plRemeasureWidth?: number;
+            loRemeasureLength?: number;
+            loRemeasureWidth?: number;
             inventoryProduct: {
                 id: number;
                 combinedNumber: string;
@@ -121,7 +123,7 @@ export interface SalesOrderForLOData {
     }>;
 }
 
-export type AddLoadingOrderScreenProps = ScreenProps<{ salesOrderId: number }>;
+export type AddLoadingOrderScreenProps = ScreenProps<{ salesOrderId: number; packagingListId: number }>;
 
 interface SelectedProduct {
     salesOrderProductId: number;
@@ -131,17 +133,13 @@ interface SelectedProduct {
 
 const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
     const salesOrderId = props.route.params?.salesOrderId;
-    const [data, setData] = useState<SalesOrderForLOData | null>(null);
+    const packagingListId = props.route.params?.packagingListId;
+    const [data, setData] = useState<PackagingListForLOData | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
 
     // Form state
     const [loDate, setLoDate] = useState<Date>(new Date());
-    const [expDeliveryDate, setExpDeliveryDate] = useState<Date | undefined>();
-    const [deliveryType, setDeliveryType] = useState<string>('delivery');
-    const [paymentTermId, setPaymentTermId] = useState<number | null>(null);
-    const [deliveryNotes, setDeliveryNotes] = useState<string>('');
-    const [internalNote, setInternalNote] = useState<string>('');
     const [selectedProducts, setSelectedProducts] = useState<Map<number, SelectedProduct>>(new Map());
 
     const tokens = getTokens();
@@ -149,46 +147,42 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
 
     useFocusEffect(
         useCallback(() => {
-            if (salesOrderId) {
+            if (packagingListId) {
                 fetchData();
             }
             return () => { };
-        }, [salesOrderId]),
+        }, [packagingListId]),
     );
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await services.sales.getSalesOrderForCreateLO(salesOrderId);
+            const response = await services.sales.packagingList(packagingListId);
             if (response.success && response.data?.data) {
                 const apiData = response.data.data as any;
                 setData(apiData);
 
                 // Set initial form values
                 setLoDate(new Date());
-                setExpDeliveryDate(apiData.expDeliveryDate ? new Date(apiData.expDeliveryDate) : undefined);
-                setDeliveryType(apiData.deliveryType || 'delivery');
-                setPaymentTermId(apiData.paymentTermId);
-                setDeliveryNotes(apiData.deliveryNotes || '');
-                setInternalNote('');
 
                 // Initialize with all products selected by default
                 const selectionMap = new Map<number, SelectedProduct>();
                 apiData.products.forEach((product: any) => {
                     product.salesOrderProduct.forEach((sop: any) => {
+                        const slab = sop.inventoryProduct?.slab;
                         selectionMap.set(sop.id, {
                             salesOrderProductId: sop.id,
-                            loRemeasureLength: sop.inventoryProduct.slab.receivingLength,
-                            loRemeasureWidth: sop.inventoryProduct.slab.receivingWidth,
+                            loRemeasureLength: sop.plRemeasureLength ?? slab?.receivingLength ?? 0,
+                            loRemeasureWidth: sop.plRemeasureWidth ?? slab?.receivingWidth ?? 0,
                         });
                     });
                 });
                 setSelectedProducts(selectionMap);
             } else {
-                showErrorToast(response.error?.message?.[0] ?? 'Failed to fetch sales order data');
+                showErrorToast(response.error?.message?.[0] ?? 'Failed to fetch packaging list data');
             }
         } catch (error) {
-            showErrorToast('Failed to fetch sales order data');
+            showErrorToast('Failed to fetch packaging list data');
         } finally {
             setLoading(false);
         }
@@ -199,15 +193,12 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
             const newMap = new Map(prev);
             const existing = newMap.get(salesOrderProductId);
             if (selected) {
-                // When selecting, preserve existing dimensions if they exist, otherwise use passed values
                 newMap.set(salesOrderProductId, {
                     salesOrderProductId,
                     loRemeasureLength: existing?.loRemeasureLength ?? remeasureLength,
                     loRemeasureWidth: existing?.loRemeasureWidth ?? remeasureWidth,
                 });
             } else {
-                // When deselecting, keep dimensions but remove from selected products
-                // Actually, we'll just delete it - dimensions can be re-entered when selecting again
                 newMap.delete(salesOrderProductId);
             }
             return newMap;
@@ -218,8 +209,6 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
         setSelectedProducts(prev => {
             const newMap = new Map(prev);
             const existing = newMap.get(salesOrderProductId);
-            // Always create/update entry to store dimensions, even if product is not selected
-            // This allows users to edit dimensions before selecting
             newMap.set(salesOrderProductId, {
                 salesOrderProductId,
                 ...existing,
@@ -237,20 +226,16 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
         let taxable = 0;
 
         selectedProducts.forEach((selected, salesOrderProductId) => {
-            // Find the product and salesOrderProduct
             let unitPrice = 0;
-            let taxPercentage = 0;
             let sqFt = 0;
 
             data.products.forEach(product => {
                 const sop = product.salesOrderProduct.find(p => p.id === salesOrderProductId);
                 if (sop) {
                     unitPrice = parseFloat(sop.unitPrice || '0');
-                    taxPercentage = sop.taxPercentage || 0;
 
-                    // Calculate sqft from remeasure or use receiving area
                     if (selected.loRemeasureLength && selected.loRemeasureWidth) {
-                        sqFt = (selected.loRemeasureLength * selected.loRemeasureWidth) / 144; // Convert to square feet
+                        sqFt = (selected.loRemeasureLength * selected.loRemeasureWidth) / 144;
                     } else {
                         sqFt = sop.receivingAreaSqFt || 0;
                     }
@@ -262,15 +247,14 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
             taxable += productTotal;
         });
 
-        const tax = taxable * (data.tax.value / 100);
+        const tax = taxable * ((data.salesOrder.tax?.value || 0) / 100);
         const total = subtotal + tax;
 
         return { subtotal, serviceCharges: 0, taxable, tax, total };
     };
 
     const handleSubmit = async () => {
-        if (!data || !expDeliveryDate) {
-            showErrorToast('Expected Delivery Date is required');
+        if (!data) {
             return;
         }
 
@@ -289,14 +273,7 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
 
             const payload = {
                 loDate: moment(loDate).format('YYYY-MM-DD'),
-                expDeliveryDate: moment(expDeliveryDate).format('YYYY-MM-DD'),
-                deliveryNotes: deliveryNotes,
-                internalNote: internalNote,
-                deliveryType: deliveryType,
-                shippingAddressId: data.shippingAddressId,
-                paymentTermId: paymentTermId,
-                customerId: data.customerId,
-                salesOrderId: data.id.toString(),
+                packagingListId: packagingListId.toString(),
                 soProducts: soProducts,
             };
 
@@ -317,14 +294,13 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
     if (loading || !data) {
         return (
             <BaseScreen>
-                <ScreenLoadingIndicator title="Loading Sales Order Data..." />
+                <ScreenLoadingIndicator title="Loading Packaging List Data..." />
             </BaseScreen>
         );
     }
 
     const totals = calculateTotals();
-    // LO number will be generated by the backend, just show a placeholder
-    const loNumber = '7'; // This will be generated by backend
+    const loNumber = '7';
 
     return (
         <BaseScreen scrollable={false} keyboardAware={false} backgroundColor={theme.backgroundSecondary?.val}>
@@ -345,17 +321,16 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
 
                 {/* Main Content: Two Column Layout */}
                 <XStack gap={tokens.space[4].val} alignItems="flex-start" flexWrap="wrap">
-                    {/* Left Column: Loading Order Details */}
+                    {/* Left Column: Details */}
                     <YStack flex={1} minWidth={300} gap={tokens.space[4].val}>
-                        {/* Loading Order Details Card */}
                         <CardWithHeader title="Loading Order Details">
                             <YStack gap={tokens.space[4].val}>
                                 {/* Delivery Toggle */}
                                 <XStack justifyContent="space-between" alignItems="center">
                                     <BodyText color={theme.textPrimary?.val || '#1F2937'}>Delivery</BodyText>
                                     <Switch
-                                        value={deliveryType === 'delivery'}
-                                        onValueChange={(value) => setDeliveryType(value ? 'delivery' : 'pickup')}
+                                        value={data.deliveryType === 'delivery'}
+                                        disabled
                                         trackColor={{ false: theme.gray5?.val || '#E5E7EB', true: theme.primary?.val || '#0891B2' }}
                                         thumbColor={theme.background?.val || '#FFFFFF'}
                                     />
@@ -363,7 +338,7 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
 
                                 {/* Customer Field */}
                                 <FormFieldWrapper label="Customer">
-                                    <FormTextInput value={data.customer.name} onChange={() => { }} disabled />
+                                    <FormTextInput value={data.salesOrder.customer.name} onChange={() => { }} disabled />
                                 </FormFieldWrapper>
 
                                 {/* Contact Information Card */}
@@ -374,18 +349,18 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                                     containerProps={{ padding: tokens.space[4].val }}>
                                     <YStack gap={tokens.space[2].val}>
                                         <Heading5 color={theme.textPrimary?.val || '#1F2937'}>
-                                            {data.customer.contactName}
+                                            {data.salesOrder.customer.contactName}
                                         </Heading5>
                                         <XStack alignItems="center" gap={tokens.space[2].val}>
                                             <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.customer.primaryPhoneNumber}
+                                                {data.salesOrder.customer.primaryPhoneNumber}
                                             </BodyText>
                                         </XStack>
                                         <XStack alignItems="center" gap={tokens.space[2].val}>
                                             <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.customer.email}
+                                                {data.salesOrder.customer.email}
                                             </BodyText>
                                         </XStack>
                                     </YStack>
@@ -393,39 +368,41 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
 
                                 {/* Delivery Location Field */}
                                 <FormFieldWrapper label="Delivery Location">
-                                    <FormTextInput value={data.shippingAddress.address} onChange={() => { }} disabled />
+                                    <FormTextInput value={data.shippingAddress?.address || ''} onChange={() => { }} disabled />
                                 </FormFieldWrapper>
 
                                 {/* Shipping Address Card */}
-                                <CardWithHeader
-                                    title="SHIPPING ADDRESS"
-                                    variant="highlighted"
-                                    color="green"
-                                    containerProps={{ padding: tokens.space[4].val }}>
-                                    <YStack gap={tokens.space[2].val}>
-                                        <Heading5 color={theme.green9?.val || '#15803D'}>
-                                            {data.shippingAddress.address}
-                                        </Heading5>
-                                        <XStack alignItems="center" gap={tokens.space[2].val}>
-                                            <User size={16} color={theme.textSecondary?.val || '#6B7280'} />
-                                            <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.shippingAddress.contactName}
-                                            </BodyText>
-                                        </XStack>
-                                        <XStack alignItems="center" gap={tokens.space[2].val}>
-                                            <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />
-                                            <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.shippingAddress.contactNumber}
-                                            </BodyText>
-                                        </XStack>
-                                        <XStack alignItems="center" gap={tokens.space[2].val}>
-                                            <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />
-                                            <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.shippingAddress.contactEmail}
-                                            </BodyText>
-                                        </XStack>
-                                    </YStack>
-                                </CardWithHeader>
+                                {data.shippingAddress && (
+                                    <CardWithHeader
+                                        title="SHIPPING ADDRESS"
+                                        variant="highlighted"
+                                        color="green"
+                                        containerProps={{ padding: tokens.space[4].val }}>
+                                        <YStack gap={tokens.space[2].val}>
+                                            <Heading5 color={theme.green9?.val || '#15803D'}>
+                                                {data.shippingAddress.address}
+                                            </Heading5>
+                                            <XStack alignItems="center" gap={tokens.space[2].val}>
+                                                <User size={16} color={theme.textSecondary?.val || '#6B7280'} />
+                                                <BodyText color={theme.textSecondary?.val || '#6B7280'}>
+                                                    {data.shippingAddress.contactName || '--'}
+                                                </BodyText>
+                                            </XStack>
+                                            <XStack alignItems="center" gap={tokens.space[2].val}>
+                                                <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />
+                                                <BodyText color={theme.textSecondary?.val || '#6B7280'}>
+                                                    {data.shippingAddress.contactNumber || '--'}
+                                                </BodyText>
+                                            </XStack>
+                                            <XStack alignItems="center" gap={tokens.space[2].val}>
+                                                <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />
+                                                <BodyText color={theme.textSecondary?.val || '#6B7280'}>
+                                                    {data.shippingAddress.contactEmail || '--'}
+                                                </BodyText>
+                                            </XStack>
+                                        </YStack>
+                                    </CardWithHeader>
+                                )}
                             </YStack>
                         </CardWithHeader>
                     </YStack>
@@ -436,17 +413,17 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                             <YStack gap={tokens.space[4].val}>
                                 <FormFieldWrapper label="Internal Notes">
                                     <FormTextArea
-                                        value={internalNote}
-                                        onChange={(value) => setInternalNote(value || '')}
-                                        placeholder="Enter internal notes..."
+                                        value={data.internalNote || ''}
+                                        onChange={() => { }}
+                                        disabled
                                         numberOfLines={6}
                                     />
                                 </FormFieldWrapper>
                                 <FormFieldWrapper label="Delivery Notes">
                                     <FormTextArea
-                                        value={deliveryNotes}
-                                        onChange={(value) => setDeliveryNotes(value || '')}
-                                        placeholder="Enter delivery notes..."
+                                        value={data.deliveryNotes || ''}
+                                        onChange={() => { }}
+                                        disabled
                                         numberOfLines={6}
                                     />
                                 </FormFieldWrapper>
@@ -468,25 +445,24 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                         </YStack>
                         <YStack flex={1} minWidth={150}>
                             <FormFieldWrapper label="SO Location">
-                                <FormTextInput value={data.soLocation.locationName} onChange={() => { }} disabled />
+                                <FormTextInput value={data.salesOrder.soLocation?.locationName || ''} onChange={() => { }} disabled />
                             </FormFieldWrapper>
                         </YStack>
                         <YStack flex={1} minWidth={150}>
                             <FormFieldWrapper label="Payment Terms">
-                                <SelectDropdown
-                                    endpoint="paymentTerms"
-                                    value={paymentTermId}
-                                    onSelectionChange={(value) => setPaymentTermId(value as number)}
-                                    placeholder="Select terms"
+                                <FormTextInput
+                                    value={data.salesOrder.customer.paymentTerm?.value ? `${data.salesOrder.customer.paymentTerm.value} Days` : '--'}
+                                    onChange={() => { }}
+                                    disabled
                                 />
                             </FormFieldWrapper>
                         </YStack>
                         <YStack flex={1} minWidth={150}>
-                            <FormFieldWrapper label="Exp. Delivery Date" required>
-                                <DatePicker
-                                    value={expDeliveryDate}
-                                    onChange={(date) => setExpDeliveryDate(date)}
-                                    placeholder="Select date"
+                            <FormFieldWrapper label="Exp. Delivery Date">
+                                <FormTextInput
+                                    value={data.expDeliveryDate ? moment(data.expDeliveryDate).format('YYYY-MM-DD') : '--'}
+                                    onChange={() => { }}
+                                    disabled
                                 />
                             </FormFieldWrapper>
                         </YStack>
@@ -496,11 +472,11 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                 {/* Products Section */}
                 <YStack marginTop={tokens.space[4].val}>
                     <ProductsTableForLO
-                        products={data.products}
+                        products={data.products as any}
                         selectedProducts={selectedProducts}
                         onProductSelectionChange={handleProductSelectionChange}
                         onRemeasureChange={handleRemeasureChange}
-                        taxPercentage={data.tax.value}
+                        taxPercentage={data.salesOrder.tax?.value || 0}
                         onRefresh={fetchData}
                     />
                 </YStack>
@@ -514,7 +490,7 @@ const AddLoadingOrderScreen: React.FC<AddLoadingOrderScreenProps> = props => {
                                 { label: 'Subtotal', value: totals.subtotal },
                                 { label: 'Service Charges', value: totals.serviceCharges },
                                 { label: 'Taxable', value: totals.taxable },
-                                { label: `Tax(${data.tax.value}%)`, value: totals.tax },
+                                { label: `Tax(${data.salesOrder.tax?.value || 0}%)`, value: totals.tax },
                                 { label: 'Total', value: totals.total, bold: true, color: theme.blue8?.val || '#3B82F6', divider: true },
                             ]}
                         />

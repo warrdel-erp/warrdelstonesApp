@@ -137,21 +137,24 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
             const selected = selectedProducts.get(sop.id);
             const hasStoredDimensions = selected !== undefined;
 
+            const slab = sop.inventoryProduct?.slab;
+            const gp = sop.inventoryProduct?.genericProduct;
+
             // For display: use plRemeasure if available, otherwise use loRemeasure, otherwise use receiving dimensions
             const plRemeasureLength = hasStoredDimensions
                 ? selected.plRemeasureLength
-                : (sop.loRemeasureLength !== undefined ? sop.loRemeasureLength : sop.inventoryProduct.slab.receivingLength);
+                : (sop.loRemeasureLength !== undefined ? sop.loRemeasureLength : (slab?.receivingLength || 0));
             const plRemeasureWidth = hasStoredDimensions
                 ? selected.plRemeasureWidth
-                : (sop.loRemeasureWidth !== undefined ? sop.loRemeasureWidth : sop.inventoryProduct.slab.receivingWidth);
+                : (sop.loRemeasureWidth !== undefined ? sop.loRemeasureWidth : (slab?.receivingWidth || 0));
 
             // For calculation, use plRemeasure if available, otherwise use loRemeasure, otherwise receiving
             const calcLength = (selected?.plRemeasureLength !== undefined)
                 ? selected.plRemeasureLength
-                : (sop.loRemeasureLength !== undefined ? sop.loRemeasureLength : sop.inventoryProduct.slab.receivingLength);
+                : (sop.loRemeasureLength !== undefined ? sop.loRemeasureLength : (slab?.receivingLength || 0));
             const calcWidth = (selected?.plRemeasureWidth !== undefined)
                 ? selected.plRemeasureWidth
-                : (sop.loRemeasureWidth !== undefined ? sop.loRemeasureWidth : sop.inventoryProduct.slab.receivingWidth);
+                : (sop.loRemeasureWidth !== undefined ? sop.loRemeasureWidth : (slab?.receivingWidth || 0));
             const calculatedQty = (calcLength * calcWidth) / 144; // Convert to square feet
 
             if (isSelected) {
@@ -162,12 +165,14 @@ const ProductsTableForPL: React.FC<ProductsTableForPLProps> = ({
 
             return {
                 salesOrderProductId: sop.id,
-                serialNo: sop.inventoryProduct.combinedNumber,
-                barcode: sop.inventoryProduct.slab.barcode,
-                blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
-                slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-                location: sop.inventoryProduct.bin.name,
-                qtySf: `${sop.inventoryProduct.slab.receivingLength} x ${sop.inventoryProduct.slab.receivingWidth} = ${sop.loSqrFt.toFixed(2)} SF`,
+                serialNo: sop.inventoryProduct?.combinedNumber || '',
+                barcode: slab?.barcode || gp?.barcode || '',
+                blockBundle: slab ? `${slab.block}-${slab.lot}` : '-',
+                slabNo: slab ? slab.slabNumber.toString() : '-',
+                location: sop.inventoryProduct?.bin?.name || '',
+                qtySf: slab 
+                    ? `${slab.receivingLength} x ${slab.receivingWidth} = ${sop.loSqrFt ? sop.loSqrFt.toFixed(2) : '0.00'} SF`
+                    : `${sop.loSqrFt ? sop.loSqrFt.toFixed(2) : '0.00'} SF`,
                 loRemeasureLength: sop.loRemeasureLength,
                 loRemeasureWidth: sop.loRemeasureWidth,
                 plRemeasureLength,

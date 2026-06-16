@@ -54,6 +54,13 @@ const TABS = [
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+  // Hide tab bar on nested stack screens
+  const currentRoute = state.routes[state.index];
+  const isNested = currentRoute.state && currentRoute.state.index !== undefined && currentRoute.state.index > 0;
+  if (isNested) {
+    return null;
+  }
+
   return (
     <View style={styles.tabBarOuter}>
       {/* Frosted glass card */}

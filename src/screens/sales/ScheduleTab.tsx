@@ -2,7 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Truck } from '@tamagui/lucide-icons';
 import moment from 'moment';
 import React from 'react';
-import { FlatList, ListRenderItemInfo, TouchableOpacity, View } from 'react-native';
+import { FlatList, ListRenderItemInfo, TouchableOpacity, View, Platform } from 'react-native';
 import { Text, XStack, getTokens, useTheme } from 'tamagui';
 import { TruckSelectionDialog } from '../../components/sales/TruckSelectionDialog';
 import { Button, CheckBox, FloatingActionButton, StatusBadge } from '../../components/ui';
@@ -211,7 +211,7 @@ export const ScheduleTab: React.FC<{ isActive?: boolean }> = ({ isActive }) => {
                     />
                     <View style={{
                         position: 'absolute',
-                        bottom: tokens.space[4].val,
+                        bottom: Platform.OS === 'ios' ? 105 : 90,
                         right: tokens.space[4].val,
                         zIndex: 10,
                     }}>

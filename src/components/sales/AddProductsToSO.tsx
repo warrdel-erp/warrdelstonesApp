@@ -7,6 +7,9 @@ import { AppDialog } from '../ui/AppDialog';
 import Button from '../ui/Button';
 import MobileTable, { Column } from '../ui/MobileTable';
 import StatusBadge from '../ui/StatusBadge';
+import FormTextInput from '../ui/FormTextInput';
+import { BodyText } from '../ui';
+import { showErrorToast } from '../../utils';
 
 
 // Types based on API response
@@ -117,6 +120,7 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
     const [inventoryProductsCache, setInventoryProductsCache] = useState<Record<number, InventoryProduct[]>>({});
     const [selectedInventoryProducts, setSelectedInventoryProducts] = useState<Set<number>>(new Set());
     const [productPrices, setProductPrices] = useState<Record<number, string>>({}); // Store product prices by productId
+    const [productPriceErrors, setProductPriceErrors] = useState<Record<number, boolean>>({}); // Track price validation errors
 
     // Fetch products from API
     const fetchProducts = useCallback(async () => {
@@ -268,6 +272,8 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
     const handleConfirmSelection = () => {
         if (onProductsSelected && selectedInventoryProducts.size > 0) {
             const selectedProducts: SelectedInventoryProduct[] = [];
+            let hasValidationError = false;
+            const newErrors: Record<number, boolean> = {};
 
             selectedInventoryProducts.forEach(inventoryProductId => {
                 // Find the product that contains this inventory product
@@ -282,20 +288,34 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                     }
                 }
 
-                if (productId && productPrices[productId]) {
+                if (productId) {
+                    const priceStr = productPrices[productId];
+                    const priceNum = parseFloat(priceStr || '0');
+
+                    if (!priceStr || isNaN(priceNum) || priceNum <= 0) {
+                        newErrors[productId] = true;
+                        hasValidationError = true;
+                    }
+
                     selectedProducts.push({
                         inventoryProductId,
-                        unitPrice: productPrices[productId],
+                        unitPrice: priceStr || '0.00',
                         taxApplied: true,
                         details: inventoryProduct || undefined,
                     });
                 }
             });
 
+            if (hasValidationError) {
+                setProductPriceErrors(prev => ({ ...prev, ...newErrors }));
+                return;
+            }
+
             onProductsSelected(selectedProducts);
         }
         setModalVisible(false);
         setSelectedInventoryProducts(new Set());
+        setProductPriceErrors({});
     };
 
     const handleToggleInventoryProduct = (inventoryProductId: number) => {
@@ -321,7 +341,12 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
 
             <AppDialog
                 open={modalVisible}
-                onOpenChange={setModalVisible}
+                onOpenChange={(open) => {
+                    setModalVisible(open);
+                    if (!open) {
+                        setProductPriceErrors({});
+                    }
+                }}
                 title="Select Products"
                 maxWidth="95%"
                 maxHeight="90%"
@@ -334,7 +359,10 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                             <Button
                                 title="Cancel"
                                 variant="outline"
-                                onPress={() => setModalVisible(false)}
+                                onPress={() => {
+                                    setModalVisible(false);
+                                    setProductPriceErrors({});
+                                }}
                             />
                             <Button
                                 title="Add Selected"
@@ -368,6 +396,36 @@ export const AddProductsToSO: React.FC<AddProductsToSOProps> = ({
                                     <YStack
                                         gap={tokens.space[2].val}
                                     >
+                                        <XStack alignItems="center" gap={tokens.space[2].val} paddingHorizontal={tokens.space[3].val} marginVertical={tokens.space[2].val}>
+                                            <BodyText style={{ fontWeight: '600' }}>Selling Price:</BodyText>
+                                            <YStack width={120}>
+                                                <FormTextInput
+                                                    value={productPrices[product.id]}
+                                                    onChange={(val) => {
+                                                        const priceStr = val?.toString() || '';
+                                                        const priceNum = parseFloat(priceStr);
+                                                        const isInvalid = !priceStr || isNaN(priceNum) || priceNum <= 0;
+
+                                                        setProductPrices(prev => ({
+                                                            ...prev,
+                                                            [product.id]: priceStr,
+                                                        }));
+                                                        setProductPriceErrors(prev => ({
+                                                            ...prev,
+                                                            [product.id]: isInvalid,
+                                                        }));
+                                                    }}
+                                                    placeholder="Enter price"
+                                                    type="number"
+                                                    hasError={productPriceErrors[product.id]}
+                                                />
+                                                {productPriceErrors[product.id] && (
+                                                    <Text fontSize={tokens.size[2.5].val} color={theme.statusError?.val || '#DC2626'} marginTop={2}>
+                                                        Price must be greater than 0
+                                                    </Text>
+                                                )}
+                                            </YStack>
+                                        </XStack>
                                         <MobileTable
                                             selectable
                                             selectedRows={Array.from(selectedInventoryProducts)}

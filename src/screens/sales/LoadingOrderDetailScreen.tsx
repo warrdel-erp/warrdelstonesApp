@@ -27,46 +27,50 @@ export interface LoadingOrderDetailData {
     deliveryNotes: string;
     deliveryType: string;
     stage: string;
-    salesOrder: {
+    packagingList: {
         id: number;
-        clientSoNumber: number;
-        tax: {
+        code: string;
+        salesOrder: {
             id: number;
-            code: string;
-            label: string;
-            value: number;
-            stateTax: number;
-        }
-        customer: {
-            id: number;
-            name: string;
-            contactName: string;
-            primaryPhoneNumber: string;
-            email: string;
-            addresses: Array<{
+            clientSoNumber: number;
+            tax: {
                 id: number;
-                address: string;
+                code: string;
+                label: string;
+                value: number;
+                stateTax: number;
+            }
+            customer: {
+                id: number;
+                name: string;
                 contactName: string;
-                contactEmail: string;
-                contactNumber: string;
-                addressType: string;
-            }>;
-            paymentTerm?: {
+                primaryPhoneNumber: string;
+                email: string;
+                addresses: Array<{
+                    id: number;
+                    address: string;
+                    contactName: string;
+                    contactEmail: string;
+                    contactNumber: string;
+                    addressType: string;
+                }>;
+                paymentTerm?: {
+                    id: number;
+                    value: string;
+                };
+            };
+            soLocation: {
                 id: number;
-                value: string;
+                locationName: string;
             };
         };
-        soLocation: {
+        shippingAddress: {
             id: number;
-            locationName: string;
+            address: string;
+            contactName: string;
+            contactEmail: string;
+            contactNumber: string;
         };
-    };
-    shippingAddress: {
-        id: number;
-        address: string;
-        contactName: string;
-        contactEmail: string;
-        contactNumber: string;
     };
     tax?: {
         id: number;
@@ -178,9 +182,9 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
     }
 
     const calculations = data.calculations?.loadingOrder || data.calculations?.final;
-    const tax = data.salesOrder?.tax;
-    const billingAddress = data.salesOrder.customer.addresses?.find(addr => addr.addressType === 'REMIT');
-    const salesOrderId = data.salesOrder.id;
+    const tax = data.packagingList?.salesOrder?.tax;
+    const billingAddress = data.packagingList?.salesOrder?.customer?.addresses?.find(addr => addr.addressType === 'REMIT');
+    const salesOrderId = data.packagingList?.salesOrder?.id;
 
     // Prepare data structures outside of JSX
     const scrollViewContentStyle = {
@@ -191,18 +195,18 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
     const orderInformationItems = [
         {
             label: 'Customer',
-            value: data.salesOrder.customer.name,
+            value: data.packagingList?.salesOrder?.customer?.name || '--',
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {
             label: 'SO Location',
-            value: data.salesOrder.soLocation.locationName,
+            value: data.packagingList?.salesOrder?.soLocation?.locationName || '--',
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {
             label: 'Payment Term',
-            value: data.salesOrder.customer.paymentTerm
-                ? `${data.salesOrder.customer.paymentTerm.value} Days`
+            value: data.packagingList?.salesOrder?.customer?.paymentTerm
+                ? `${data.packagingList.salesOrder.customer.paymentTerm.value} Days`
                 : '-- Days',
         },
     ];
@@ -232,7 +236,7 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
     const shippingAddressItems = [
         {
             label: 'SHIPPING ADDRESS',
-            value: data.shippingAddress.address,
+            value: data.packagingList?.shippingAddress?.address || '--',
             icon: <MapPin size={16} color={theme.green8?.val || '#10B981'} />,
             valueStyle: { color: theme.green9?.val || '#15803D', fontWeight: '600' },
             width: '100%',
@@ -240,12 +244,12 @@ const LoadingOrderDetailScreen: React.FC<LoadingOrderDetailScreenProps> = props 
         },
         {
             label: 'Phone',
-            value: data.shippingAddress.contactNumber,
+            value: data.packagingList?.shippingAddress?.contactNumber || '--',
             icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
         },
         {
             label: 'Email',
-            value: data.shippingAddress.contactEmail,
+            value: data.packagingList?.shippingAddress?.contactEmail || '--',
             icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
         },
     ];

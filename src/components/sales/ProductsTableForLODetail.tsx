@@ -29,7 +29,7 @@ export interface ProductForLODetail {
                 id: number;
                 name: string;
             };
-            slab: {
+            slab?: {
                 id: number;
                 serialNumber: number;
                 slabNumber: number;
@@ -38,7 +38,11 @@ export interface ProductForLODetail {
                 barcode: string;
                 receivingLength: number;
                 receivingWidth: number;
-            };
+            } | null;
+            genericProduct?: {
+                id: number;
+                barcode: string;
+            } | null;
         };
         swapHistories?: any[];
     }>;
@@ -130,8 +134,10 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
 
         const inventoryItems: InventoryItem[] = product.salesOrderProduct.map(sop => {
             const receivingQty = sop.receivingAreaSqFt;
-            const remeasureLength = sop.loRemeasureLength ?? sop.inventoryProduct.slab.receivingLength;
-            const remeasureWidth = sop.loRemeasureWidth ?? sop.inventoryProduct.slab.receivingWidth;
+            const slab = sop.inventoryProduct?.slab;
+            const gp = sop.inventoryProduct?.genericProduct;
+            const remeasureLength = sop.loRemeasureLength ?? slab?.receivingLength ?? 0;
+            const remeasureWidth = sop.loRemeasureWidth ?? slab?.receivingWidth ?? 0;
             const remeasureQty = (remeasureLength * remeasureWidth) / 144;
 
             totalReceivingQty += receivingQty;
@@ -139,17 +145,19 @@ const ProductsTableForLODetail: React.FC<ProductsTableForLODetailProps> = ({
             totalAmount += remeasureQty * unitPrice;
 
             return {
-                serialNo: sop.inventoryProduct.combinedNumber,
-                barcode: sop.inventoryProduct.slab.barcode,
-                blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
-                slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-                location: sop.inventoryProduct.bin.name,
-                quantity: `${sop.inventoryProduct.slab.receivingLength}×${sop.inventoryProduct.slab.receivingWidth} = ${receivingQty.toFixed(2)} SF`,
+                serialNo: sop.inventoryProduct?.combinedNumber || '',
+                barcode: slab?.barcode || gp?.barcode || '',
+                blockBundle: slab ? `${slab.block}-${slab.lot}` : '-',
+                slabNo: slab ? slab.slabNumber.toString() : '-',
+                location: sop.inventoryProduct?.bin?.name || '',
+                quantity: slab
+                    ? `${slab.receivingLength}×${slab.receivingWidth} = ${receivingQty.toFixed(2)} SF`
+                    : `${receivingQty.toFixed(2)} SF`,
                 slabRemeasureQty: `${remeasureLength}×${remeasureWidth} = ${remeasureQty.toFixed(2)} SF`,
                 salesOrderProductId: sop.id,
                 historyCount: sop.swapHistories?.length || 0,
                 productName: product.name,
-                productType: sop.inventoryProduct.isSlabType ? 'Slab' : 'Piece',
+                productType: slab ? 'Slab' : 'Piece',
                 productId: product.id,
             };
 

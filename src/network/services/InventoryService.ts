@@ -20,6 +20,8 @@ export type GetInventoryParams = {
   page: number;
   limit: number;
   categorization?: 'SIPL' | 'BUNDLE' | 'BLOCK';
+  isSlabType?: string;
+  subCategory?: string;
 };
 
 export type GetInventoryRequest = {
@@ -90,6 +92,30 @@ export class InventoryService extends BaseService {
     return this.makeRequest(() =>
       this.apiClient.get(`/api/inventoryProduct`, {
         params: { productId, status: 'IN_INVENTORY' },
+      }),
+    );
+  }
+
+  async getBlocksByProduct(productId: number, showSoldCanceled?: boolean): Promise<ApiResponse<any>> {
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/inventory/products/${productId}/blocks`, {
+        params: showSoldCanceled !== undefined ? { showSoldCanceled } : undefined,
+      }),
+    );
+  }
+
+  async getBundlesByProduct(productId: number, showSoldCanceled?: boolean): Promise<ApiResponse<any>> {
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/inventory/products/${productId}/bundles`, {
+        params: showSoldCanceled !== undefined ? { showSoldCanceled } : undefined,
+      }),
+    );
+  }
+
+  async getSiplsByProduct(productId: number, showSoldCanceled?: boolean): Promise<ApiResponse<any>> {
+    return this.makeRequest(() =>
+      this.apiClient.get(`/api/inventory/products/${productId}/sipls`, {
+        params: showSoldCanceled !== undefined ? { showSoldCanceled } : undefined,
       }),
     );
   }

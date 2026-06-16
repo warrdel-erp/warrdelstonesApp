@@ -1,6 +1,6 @@
 import { Plus } from '@tamagui/lucide-icons';
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, Platform } from 'react-native';
 import { getTokens, useTheme, XStack } from 'tamagui';
 
 export interface FloatingActionButtonProps {
@@ -57,7 +57,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     };
 
     const sizeConfig = getSizeConfig();
-    const defaultBottom = bottom ?? tokens.space[4].val;
+    const defaultBottom = bottom ?? (Platform.OS === 'ios' ? 105 : 90);
     const defaultRight = right ?? tokens.space[4].val;
 
     const defaultIcon = icon || (

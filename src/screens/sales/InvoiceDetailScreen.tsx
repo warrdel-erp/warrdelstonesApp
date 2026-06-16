@@ -62,9 +62,9 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = props => {
     }
 
     const calculations = data.calculations?.loadingOrder || data.calculations?.final;
-    const tax = data.salesOrder?.tax;
-    const billingAddress = data.salesOrder.customer.addresses?.find(addr => addr.addressType === 'REMIT');
-    const salesOrderId = data.salesOrder.id;
+    const tax = data.packagingList?.salesOrder?.tax;
+    const billingAddress = data.packagingList?.salesOrder?.customer?.addresses?.find(addr => addr.addressType === 'REMIT');
+    const salesOrderId = data.packagingList?.salesOrder?.id;
 
     // Prepare data structures outside of JSX
     const scrollViewContentStyle = {
@@ -75,18 +75,18 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = props => {
     const orderInformationItems = [
         {
             label: 'Customer',
-            value: data.salesOrder.customer.name,
+            value: data.packagingList?.salesOrder?.customer?.name || '--',
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {
             label: 'SO Location',
-            value: data.salesOrder.soLocation.locationName,
+            value: data.packagingList?.salesOrder?.soLocation?.locationName || '--',
             valueStyle: { color: theme.blue8?.val || '#3B82F6', fontWeight: '600' },
         },
         {
             label: 'Payment Term',
-            value: data.salesOrder.customer.paymentTerm
-                ? `${data.salesOrder.customer.paymentTerm.value} Days`
+            value: data.packagingList?.salesOrder?.customer?.paymentTerm
+                ? `${data.packagingList.salesOrder.customer.paymentTerm.value} Days`
                 : '-- Days',
         },
     ];
@@ -116,7 +116,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = props => {
     const shippingAddressItems = [
         {
             label: 'SHIPPING ADDRESS',
-            value: data.shippingAddress.address,
+            value: data.packagingList?.shippingAddress?.address || '--',
             icon: <MapPin size={16} color={theme.green8?.val || '#10B981'} />,
             valueStyle: { color: theme.green9?.val || '#15803D', fontWeight: '600' },
             width: '100%',
@@ -124,12 +124,12 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = props => {
         },
         {
             label: 'Phone',
-            value: data.shippingAddress.contactNumber,
+            value: data.packagingList?.shippingAddress?.contactNumber || '--',
             icon: <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />,
         },
         {
             label: 'Email',
-            value: data.shippingAddress.contactEmail,
+            value: data.packagingList?.shippingAddress?.contactEmail || '--',
             icon: <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />,
         },
     ];
@@ -173,7 +173,7 @@ const InvoiceDetailScreen: React.FC<InvoiceDetailScreenProps> = props => {
                         Invoice Details
                     </Heading>
                     <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                        Invoice for SO #{data.salesOrder.clientSoNumber}
+                        Invoice for SO #{data.packagingList?.salesOrder?.clientSoNumber || '--'}
                     </BodyText>
                 </YStack>
 

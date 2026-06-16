@@ -130,7 +130,7 @@ export interface SalesOrderDetail {
                     id: number;
                     name: string;
                 };
-                slab: {
+                slab?: {
                     id: number;
                     serialNumber: number;
                     slabNumber: number;
@@ -139,7 +139,11 @@ export interface SalesOrderDetail {
                     barcode: string;
                     receivingLength: number;
                     receivingWidth: number;
-                };
+                } | null;
+                genericProduct?: {
+                    id: number;
+                    barcode: string;
+                } | null;
             };
         }>;
     }>;
@@ -231,16 +235,22 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
         const unitPrice = parseFloat(firstProduct?.unitPrice || '0');
         const total = totalQty * unitPrice;
 
-        const inventoryItems: InventoryItem[] = product.salesOrderProduct?.map(sop => ({
-            serialNo: sop.inventoryProduct.combinedNumber,
-            barcode: sop.inventoryProduct.slab.barcode,
-            blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
-            slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-            location: sop.inventoryProduct.bin?.name,
-            qtySf: `${sop.inventoryProduct.slab.receivingLength}*${sop.inventoryProduct.slab.receivingWidth}=${sop.receivingAreaSqFt.toFixed(2)}SF`,
-            subTrx: '-',
-            productId: product.id,
-        }));
+        const inventoryItems: InventoryItem[] = product.salesOrderProduct?.map(sop => {
+            const slab = sop.inventoryProduct?.slab;
+            const gp = sop.inventoryProduct?.genericProduct;
+            return {
+                serialNo: sop.inventoryProduct?.combinedNumber || '',
+                barcode: slab?.barcode || gp?.barcode || '',
+                blockBundle: slab ? `${slab.block}-${slab.lot}` : '-',
+                slabNo: slab ? slab.slabNumber.toString() : '-',
+                location: sop.inventoryProduct?.bin?.name || '',
+                qtySf: slab 
+                    ? `${slab.receivingLength}*${slab.receivingWidth}=${sop.receivingAreaSqFt ? sop.receivingAreaSqFt.toFixed(2) : '0.00'}SF` 
+                    : `${sop.receivingAreaSqFt ? sop.receivingAreaSqFt.toFixed(2) : '0.00'}SF`,
+                subTrx: '-',
+                productId: product.id,
+            };
+        }) || [];
 
         return {
             id: product.id,
@@ -269,11 +279,11 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
         finalTotal: lo.calculations?.final?.total || 0,
         totalProfit: lo?.calculations?.final?.total - lo?.calculations?.receiving?.total || 0,
         status: lo.status || lo.fulFilled || 0,
-        packagingList: lo.packagingList || null,
+        loadingOrder: lo.loadingOrder || null,
         invoice: lo.salesOrderInvoice?.invoiceCode
             ? { code: lo.salesOrderInvoice.invoiceCode, id: lo.salesOrderInvoice.id }
             : null,
-        loDate: lo.loDate
+        loDate: lo.plDate
     }));
 
     const customerDetailItems = [
@@ -493,11 +503,11 @@ const SalesOrderDetailScreen: React.FC<SalesOrderDetailScreenProps> = props => {
                 <YStack gap={tokens.space[1].val} marginBottom={tokens.space[4].val}>
                     <LoadingOrdersTable
                         loadingOrders={loadingOrdersRows}
-                        onAddLoadingOrder={() => {
-                            props.navigation.navigate('AddLoadingOrder', { salesOrderId: salesOrderId });
+                        onAddPackagingList={() => {
+                            props.navigation.navigate('AddPackagingList', { salesOrderId: salesOrderId });
                         }}
-                        onCreatePackaging={(loadingOrderId: number) => {
-                            props.navigation.navigate('AddPackagingList', { loadingOrderId: loadingOrderId });
+                        onCreateLoadingOrder={(packagingListId: number) => {
+                            props.navigation.navigate('AddLoadingOrder', { salesOrderId, packagingListId });
                         }}
                         onCreateInvoice={handleCreateInvoice}
                         onLoadingOrderClick={(loadingOrderId: number) => {

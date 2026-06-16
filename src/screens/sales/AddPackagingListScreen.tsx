@@ -2,7 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Mail, Phone, User } from '@tamagui/lucide-icons';
 import moment from 'moment';
 import React, { useCallback, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, Switch } from 'react-native';
 import { XStack, YStack, getTokens, useTheme } from 'tamagui';
 import FinancialSummary from '../../components/sales/FinancialSummary';
 import ProductsTableForPL from '../../components/sales/ProductsTableForPL';
@@ -19,36 +19,50 @@ import { services } from '../../network';
 import { ScreenProps } from '../../types/NavigationTypes';
 import { showErrorToast, showSuccessToast } from '../../utils';
 
-export interface LoadingOrderForPLData {
-    id: number;
-    code: string;
-    clientLoNumber: number;
-    loDate: string;
-    expDeliveryDate: string;
-    paymentTermId: number | null;
-    deliveryNotes: string;
-    deliveryType: string;
-    shippingAddressId: number;
-    salesOrder: {
-        tax: {
-            id: number;
-            code: string;
-            label: string;
-            value: number;
-            stateTax: number;
-        };
+export interface SalesOrderForPLData {
+    tax: {
         id: number;
-        customer: {
+        code: string;
+        label: string;
+        value: number;
+        stateTax: number;
+    };
+    id: number;
+    clientSoNumber: number;
+    soDate: string;
+    customerPo: string;
+    status: string;
+    deliveryType: string;
+    deliveryNotes: string;
+    paymentTermId: number | null;
+    customerPoDate: string;
+    expDeliveryDate: string;
+    accountId: number;
+    customerId: number;
+    shippingAddressId: number;
+    clientId: number;
+    soLocationId: number;
+    taxId: number;
+    customer: {
+        id: number;
+        name: string;
+        contactName: string;
+        printName: string;
+        primaryPhoneNumber: string;
+        email: string;
+        accEmail: string;
+        paymentTerm?: {
             id: number;
-            name: string;
+            value: string;
+        };
+        addresses: Array<{
+            id: number;
+            address: string;
             contactName: string;
-            primaryPhoneNumber: string;
-            email: string;
-        };
-        soLocation: {
-            id: number;
-            locationName: string;
-        };
+            contactEmail: string;
+            contactNumber: string;
+            addressType: string;
+        }>;
     };
     shippingAddress: {
         id: number;
@@ -56,6 +70,10 @@ export interface LoadingOrderForPLData {
         contactName: string;
         contactEmail: string;
         contactNumber: string;
+    };
+    soLocation: {
+        id: number;
+        locationName: string;
     };
     products: Array<{
         id: number;
@@ -65,6 +83,7 @@ export interface LoadingOrderForPLData {
             id: number;
             unitPrice: string;
             taxPercentage: number;
+            receivingAreaSqFt: number;
             loSqrFt: number;
             loRemeasureLength?: number;
             loRemeasureWidth?: number;
@@ -76,6 +95,12 @@ export interface LoadingOrderForPLData {
                 bin: {
                     id: number;
                     name: string;
+                    warehouse: {
+                        location: {
+                            id: number;
+                            locationName: string;
+                        };
+                    };
                 };
                 slab: {
                     id: number;
@@ -90,7 +115,7 @@ export interface LoadingOrderForPLData {
             };
         }>;
         calculations: {
-            loadingOrder: {
+            soReceiving: {
                 subTotal: number;
                 tax: number;
                 total: number;
@@ -101,7 +126,7 @@ export interface LoadingOrderForPLData {
     }>;
 }
 
-export type AddPackagingListScreenProps = ScreenProps<{ loadingOrderId: number }>;
+export type AddPackagingListScreenProps = ScreenProps<{ salesOrderId: number }>;
 
 interface SelectedProduct {
     salesOrderProductId: number;
@@ -110,13 +135,15 @@ interface SelectedProduct {
 }
 
 const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
-    const loadingOrderId = props.route.params?.loadingOrderId;
-    const [data, setData] = useState<LoadingOrderForPLData | null>(null);
+    const salesOrderId = props.route.params?.salesOrderId;
+    const [data, setData] = useState<SalesOrderForPLData | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
 
     // Form state
     const [plDate, setPlDate] = useState<Date>(new Date());
+    const [expDeliveryDate, setExpDeliveryDate] = useState<Date | undefined>();
+    const [deliveryType, setDeliveryType] = useState<string>('delivery');
     const [paymentTermId, setPaymentTermId] = useState<number | null>(null);
     const [deliveryNotes, setDeliveryNotes] = useState<string>('');
     const [internalNote, setInternalNote] = useState<string>('');
@@ -127,46 +154,47 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
 
     useFocusEffect(
         useCallback(() => {
-            if (loadingOrderId) {
+            if (salesOrderId) {
                 fetchData();
             }
             return () => { };
-        }, [loadingOrderId]),
+        }, [salesOrderId]),
     );
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await services.sales.loadingOrder(loadingOrderId);
+            const response = await services.sales.getSalesOrderForCreateLO(salesOrderId);
             if (response.success && response.data?.data) {
                 const apiData = response.data.data as any;
                 setData(apiData);
 
                 // Set initial form values
                 setPlDate(new Date());
-                setPaymentTermId(apiData.salesOrder?.paymentTermId || null);
+                setExpDeliveryDate(apiData.expDeliveryDate ? new Date(apiData.expDeliveryDate) : undefined);
+                setDeliveryType(apiData.deliveryType || 'delivery');
+                setPaymentTermId(apiData.paymentTermId);
                 setDeliveryNotes(apiData.deliveryNotes || '');
                 setInternalNote('');
 
-                // Initialize all products from loading order with their LO remeasure values
-                const initialProducts = new Map<number, SelectedProduct>();
-                if (apiData.products) {
-                    apiData.products.forEach((product: any) => {
-                        product.salesOrderProduct?.forEach((sop: any) => {
-                            initialProducts.set(sop.id, {
-                                salesOrderProductId: sop.id,
-                                plRemeasureLength: sop.plRemeasureLength ?? sop.loRemeasureLength,
-                                plRemeasureWidth: sop.plRemeasureWidth ?? sop.loRemeasureWidth,
-                            });
+                // Initialize with all products selected by default
+                const selectionMap = new Map<number, SelectedProduct>();
+                apiData.products.forEach((product: any) => {
+                    product.salesOrderProduct.forEach((sop: any) => {
+                        const slab = sop.inventoryProduct?.slab;
+                        selectionMap.set(sop.id, {
+                            salesOrderProductId: sop.id,
+                            plRemeasureLength: slab?.receivingLength ?? 0,
+                            plRemeasureWidth: slab?.receivingWidth ?? 0,
                         });
                     });
-                }
-                setSelectedProducts(initialProducts);
+                });
+                setSelectedProducts(selectionMap);
             } else {
-                showErrorToast(response.error?.message?.[0] ?? 'Failed to fetch loading order data');
+                showErrorToast(response.error?.message?.[0] ?? 'Failed to fetch sales order data');
             }
         } catch (error) {
-            showErrorToast('Failed to fetch loading order data');
+            showErrorToast('Failed to fetch sales order data');
         } finally {
             setLoading(false);
         }
@@ -203,7 +231,6 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
         });
     };
 
-
     const calculateTotals = () => {
         if (!data) return { subtotal: 0, serviceCharges: 0, taxable: 0, tax: 0, total: 0 };
 
@@ -211,24 +238,18 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
         let taxable = 0;
 
         selectedProducts.forEach((selected, salesOrderProductId) => {
-            // Find the product and salesOrderProduct
             let unitPrice = 0;
-            let taxPercentage = 0;
             let sqFt = 0;
 
             data.products.forEach(product => {
                 const sop = product.salesOrderProduct.find(p => p.id === salesOrderProductId);
                 if (sop) {
                     unitPrice = parseFloat(sop.unitPrice || '0');
-                    taxPercentage = sop.taxPercentage || 0;
 
-                    // Calculate sqft from plRemeasure if available, otherwise use loRemeasure, otherwise loSqrFt
                     if (selected.plRemeasureLength && selected.plRemeasureWidth) {
-                        sqFt = (selected.plRemeasureLength * selected.plRemeasureWidth) / 144; // Convert to square feet
-                    } else if (sop.loRemeasureLength && sop.loRemeasureWidth) {
-                        sqFt = (sop.loRemeasureLength * sop.loRemeasureWidth) / 144;
+                        sqFt = (selected.plRemeasureLength * selected.plRemeasureWidth) / 144;
                     } else {
-                        sqFt = sop.loSqrFt || 0;
+                        sqFt = sop.receivingAreaSqFt || 0;
                     }
                 }
             });
@@ -238,20 +259,20 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
             taxable += productTotal;
         });
 
-        const tax = taxable * (data.salesOrder.tax.value / 100);
+        const tax = taxable * (data.tax.value / 100);
         const total = subtotal + tax;
 
         return { subtotal, serviceCharges: 0, taxable, tax, total };
     };
 
     const handleSubmit = async () => {
-        if (!data) {
-            showErrorToast('Loading order data is missing');
+        if (!data || !expDeliveryDate) {
+            showErrorToast('Expected Delivery Date is required');
             return;
         }
 
         if (selectedProducts.size === 0) {
-            showErrorToast('No products available');
+            showErrorToast('Please select at least one product');
             return;
         }
 
@@ -265,7 +286,14 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
 
             const payload = {
                 plDate: moment(plDate).format('YYYY-MM-DD'),
-                loadingOrderId: loadingOrderId.toString(),
+                expDeliveryDate: moment(expDeliveryDate).format('YYYY-MM-DD'),
+                deliveryNotes: deliveryNotes,
+                internalNote: internalNote,
+                deliveryType: deliveryType,
+                shippingAddressId: data.shippingAddressId,
+                paymentTermId: paymentTermId,
+                customerId: data.customerId,
+                salesOrderId: data.id.toString(),
                 soProducts: soProducts,
             };
 
@@ -286,15 +314,13 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
     if (loading || !data) {
         return (
             <BaseScreen>
-                <ScreenLoadingIndicator title="Loading Loading Order Data..." />
+                <ScreenLoadingIndicator title="Loading Sales Order Data..." />
             </BaseScreen>
         );
     }
 
     const totals = calculateTotals();
-    // PL number will be generated by the backend, just show a placeholder
-    const plNumber = '1'; // This will be generated by backend
-    const loNumber = data.code || `LO ${data.clientLoNumber}`;
+    const plNumber = '1';
 
     return (
         <BaseScreen scrollable={false} keyboardAware={false} backgroundColor={theme.backgroundSecondary?.val}>
@@ -309,7 +335,7 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                         New Packaging List
                     </Heading>
                     <BodyText color={theme.textSecondary?.val || '#6B7280'} style={{ marginTop: tokens.space[1].val }}>
-                        {`PL #${plNumber} of ${loNumber}`}
+                        {`PL #${plNumber}`}
                     </BodyText>
                 </YStack>
 
@@ -317,12 +343,22 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                 <XStack gap={tokens.space[4].val} alignItems="flex-start" flexWrap="wrap">
                     {/* Left Column: Packaging List Details */}
                     <YStack flex={1} minWidth={300} gap={tokens.space[4].val}>
-                        {/* Packaging List Details Card */}
                         <CardWithHeader title="Packaging List Details">
                             <YStack gap={tokens.space[4].val}>
-                                {/* Bill To Field */}
-                                <FormFieldWrapper label="Bill To">
-                                    <FormTextInput value={data.salesOrder.customer.name} onChange={() => { }} disabled />
+                                {/* Delivery Toggle */}
+                                <XStack justifyContent="space-between" alignItems="center">
+                                    <BodyText color={theme.textPrimary?.val || '#1F2937'}>Delivery</BodyText>
+                                    <Switch
+                                        value={deliveryType === 'delivery'}
+                                        onValueChange={(value) => setDeliveryType(value ? 'delivery' : 'pickup')}
+                                        trackColor={{ false: theme.gray5?.val || '#E5E7EB', true: theme.primary?.val || '#0891B2' }}
+                                        thumbColor={theme.background?.val || '#FFFFFF'}
+                                    />
+                                </XStack>
+
+                                {/* Customer Field */}
+                                <FormFieldWrapper label="Customer">
+                                    <FormTextInput value={data.customer.name} onChange={() => { }} disabled />
                                 </FormFieldWrapper>
 
                                 {/* Contact Information Card */}
@@ -333,18 +369,18 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                                     containerProps={{ padding: tokens.space[4].val }}>
                                     <YStack gap={tokens.space[2].val}>
                                         <Heading5 color={theme.textPrimary?.val || '#1F2937'}>
-                                            {data.salesOrder.customer.contactName}
+                                            {data.customer.contactName}
                                         </Heading5>
                                         <XStack alignItems="center" gap={tokens.space[2].val}>
                                             <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.salesOrder.customer.primaryPhoneNumber}
+                                                {data.customer.primaryPhoneNumber}
                                             </BodyText>
                                         </XStack>
                                         <XStack alignItems="center" gap={tokens.space[2].val}>
                                             <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.salesOrder.customer.email}
+                                                {data.customer.email}
                                             </BodyText>
                                         </XStack>
                                     </YStack>
@@ -352,39 +388,35 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
 
                                 {/* Delivery Location Field */}
                                 <FormFieldWrapper label="Delivery Location">
-                                    <FormTextInput value={data.shippingAddress.address} onChange={() => { }} disabled />
+                                    <FormTextInput value={data.shippingAddress?.address || ''} onChange={() => { }} disabled />
                                 </FormFieldWrapper>
 
                                 {/* Shipping Address Card */}
-                                <CardWithHeader
-                                    title="SHIPPING ADDRESS"
-                                    variant="highlighted"
-                                    color="green"
-                                    containerProps={{ padding: tokens.space[4].val }}>
-                                    <YStack gap={tokens.space[2].val}>
-                                        <Heading5 color={theme.green9?.val || '#15803D'}>
-                                            {data.shippingAddress.address}
-                                        </Heading5>
-                                        <XStack alignItems="center" gap={tokens.space[2].val}>
+                                {data.shippingAddress && (
+                                    <CardWithHeader
+                                        title="SHIPPING ADDRESS"
+                                        variant="highlighted"
+                                        color="green"
+                                        containerProps={{ padding: tokens.space[4].val }}>
+                                        <YStack gap={tokens.space[2].val}>
+                                            <Heading5 color={theme.green9?.val || '#15803D'}>
+                                                {data.shippingAddress.address}
+                                            </Heading5>
                                             <User size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.shippingAddress.contactName}
+                                                {data.shippingAddress.contactName || '--'}
                                             </BodyText>
-                                        </XStack>
-                                        <XStack alignItems="center" gap={tokens.space[2].val}>
                                             <Phone size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.shippingAddress.contactNumber}
+                                                {data.shippingAddress.contactNumber || '--'}
                                             </BodyText>
-                                        </XStack>
-                                        <XStack alignItems="center" gap={tokens.space[2].val}>
                                             <Mail size={16} color={theme.textSecondary?.val || '#6B7280'} />
                                             <BodyText color={theme.textSecondary?.val || '#6B7280'}>
-                                                {data.shippingAddress.contactEmail}
+                                                {data.shippingAddress.contactEmail || '--'}
                                             </BodyText>
-                                        </XStack>
-                                    </YStack>
-                                </CardWithHeader>
+                                        </YStack>
+                                    </CardWithHeader>
+                                )}
                             </YStack>
                         </CardWithHeader>
                     </YStack>
@@ -427,7 +459,7 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                         </YStack>
                         <YStack flex={1} minWidth={150}>
                             <FormFieldWrapper label="SO Location">
-                                <FormTextInput value={data.salesOrder.soLocation.locationName} onChange={() => { }} disabled />
+                                <FormTextInput value={data.soLocation?.locationName || ''} onChange={() => { }} disabled />
                             </FormFieldWrapper>
                         </YStack>
                         <YStack flex={1} minWidth={150}>
@@ -440,20 +472,28 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                                 />
                             </FormFieldWrapper>
                         </YStack>
+                        <YStack flex={1} minWidth={150}>
+                            <FormFieldWrapper label="Exp. Delivery Date" required>
+                                <DatePicker
+                                    value={expDeliveryDate}
+                                    onChange={(date) => setExpDeliveryDate(date)}
+                                    placeholder="Select date"
+                                />
+                            </FormFieldWrapper>
+                        </YStack>
                     </XStack>
                 </CardWithHeader>
 
                 {/* Products Section */}
                 <YStack marginTop={tokens.space[4].val}>
                     <ProductsTableForPL
-                        products={data.products}
+                        products={data.products as any}
                         selectedProducts={selectedProducts}
                         onProductSelectionChange={handleProductSelectionChange}
                         onRemeasureChange={handleRemeasureChange}
-                        taxPercentage={data.salesOrder.tax.value}
+                        taxPercentage={data.tax.value}
                         onRefresh={fetchData}
                     />
-
                 </YStack>
 
                 {/* Financial Summary and Actions */}
@@ -465,7 +505,7 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
                                 { label: 'Subtotal', value: totals.subtotal },
                                 { label: 'Service Charges', value: totals.serviceCharges },
                                 { label: 'Taxable', value: totals.taxable },
-                                { label: `Tax(${data.salesOrder.tax.value}%)`, value: totals.tax },
+                                { label: `Tax(${data.tax.value}%)`, value: totals.tax },
                                 { label: 'Total', value: totals.total, bold: true, color: theme.blue8?.val || '#3B82F6', divider: true },
                             ]}
                         />
@@ -497,6 +537,3 @@ const AddPackagingListScreen: React.FC<AddPackagingListScreenProps> = props => {
 };
 
 export default AddPackagingListScreen;
-
-
-

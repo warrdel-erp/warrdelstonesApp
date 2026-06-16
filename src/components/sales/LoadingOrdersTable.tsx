@@ -19,7 +19,7 @@ export interface LoadingOrderRow {
     finalTotal?: number;
     totalProfit?: number;
     status?: number;
-    packagingList?: {
+    loadingOrder?: {
         id: number;
         code: string;
     } | null;
@@ -31,9 +31,9 @@ export interface LoadingOrderRow {
 
 export interface LoadingOrdersTableProps {
     loadingOrders: LoadingOrderRow[];
-    onAddLoadingOrder?: () => void;
+    onAddPackagingList?: () => void;
     onPrint?: (loadingOrderId: number) => void;
-    onCreatePackaging?: (loadingOrderId: number) => void;
+    onCreateLoadingOrder?: (packagingListId: number) => void;
     onCreateInvoice?: (loadingOrderId: number) => void;
     onLoadingOrderClick?: (loadingOrderId: number) => void;
     onPackagingListClick?: (packagingListId: number) => void;
@@ -42,9 +42,9 @@ export interface LoadingOrdersTableProps {
 
 const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
     loadingOrders,
-    onAddLoadingOrder,
+    onAddPackagingList,
     onPrint,
-    onCreatePackaging,
+    onCreateLoadingOrder,
     onCreateInvoice,
     onLoadingOrderClick,
     onPackagingListClick,
@@ -66,9 +66,9 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
 
         const actions: ActionMenuItem[] = [
             {
-                label: 'View',
-                icon: FileText,
-                onPress: () => onLoadingOrderClick?.(lo.id),
+                label: 'View PL',
+                icon: Package,
+                onPress: () => onPackagingListClick?.(lo.id),
             },
             {
                 label: 'Print',
@@ -77,12 +77,12 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
             },
         ];
 
-        // Add conditional actions if PL or Invoice exists
-        if (lo.packagingList) {
+        // Add conditional actions if LO or Invoice exists
+        if (lo.loadingOrder) {
             actions.push({
-                label: 'View PL',
-                icon: Package,
-                onPress: () => onPackagingListClick?.(lo.packagingList!.id),
+                label: 'View LO',
+                icon: FileText,
+                onPress: () => onLoadingOrderClick?.(lo.loadingOrder!.id),
             });
         }
 
@@ -90,33 +90,33 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
             actions.push({
                 label: 'View Invoice',
                 icon: FileText,
-                onPress: () => onInvoiceClick?.(lo.id),
+                onPress: () => onInvoiceClick?.(lo.loadingOrder!.id),
             });
         }
 
         // Add create actions only if they don't exist
-        if (!lo.packagingList) {
+        if (!lo.loadingOrder) {
             actions.push({
-                label: 'Create Packaging',
-                icon: Package,
-                onPress: () => onCreatePackaging?.(lo.id),
+                label: 'Create Loading',
+                icon: FileText,
+                onPress: () => onCreateLoadingOrder?.(lo.id),
             });
         }
 
-        if (!lo.invoice) {
+        if (lo.loadingOrder && !lo.invoice) {
             actions.push({
                 label: 'Create Invoice',
                 icon: FileText,
-                onPress: () => onCreateInvoice?.(lo.id),
+                onPress: () => onCreateInvoice?.(lo.loadingOrder!.id),
             });
         }
 
 
         const detailItems = [
             {
-                label: 'Packaging List',
+                label: 'Loading Order',
                 width: '47%',
-                value: lo.packagingList?.code || '-',
+                value: lo.loadingOrder?.code || '-',
             },
             {
                 label: 'Invoice',
@@ -175,10 +175,10 @@ const LoadingOrdersTable: React.FC<LoadingOrdersTableProps> = ({
             customActions={
                 (
                     <Button
-                        title="Add LO"
+                        title="Add PL"
                         variant="outline"
                         size="small"
-                        onPress={onAddLoadingOrder}
+                        onPress={onAddPackagingList}
                         style={{ marginRight: tokens.space[2].val }}
                     />
                 )

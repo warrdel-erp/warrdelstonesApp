@@ -137,22 +137,25 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
             const selected = selectedProducts.get(sop.id);
             const hasStoredDimensions = selected !== undefined;
 
+            const slab = sop.inventoryProduct?.slab;
+            const gp = sop.inventoryProduct?.genericProduct;
+
             // For display: if user has interacted (stored in map), use stored value (undefined = empty)
             // If not in map, show default receiving dimensions
             const remeasureLength = hasStoredDimensions
                 ? selected?.loRemeasureLength
-                : sop.inventoryProduct.slab.receivingLength;
+                : (slab?.receivingLength || 0);
             const remeasureWidth = hasStoredDimensions
                 ? selected?.loRemeasureWidth
-                : sop.inventoryProduct.slab.receivingWidth;
+                : (slab?.receivingWidth || 0);
 
             // For calculation, use remeasure if available, otherwise fall back to receiving dimensions
             const calcLength = (selected?.loRemeasureLength !== undefined)
                 ? selected.loRemeasureLength
-                : sop.inventoryProduct.slab.receivingLength;
+                : (slab?.receivingLength || 0);
             const calcWidth = (selected?.loRemeasureWidth !== undefined)
                 ? selected.loRemeasureWidth
-                : sop.inventoryProduct.slab.receivingWidth;
+                : (slab?.receivingWidth || 0);
             const calculatedQty = (calcLength * calcWidth) / 144; // Convert to square feet
 
             if (isSelected) {
@@ -162,14 +165,16 @@ const ProductsTableForLO: React.FC<ProductsTableForLOProps> = ({
 
             return {
                 salesOrderProductId: sop.id,
-                serialNo: sop.inventoryProduct.combinedNumber,
-                barcode: sop.inventoryProduct.slab.barcode,
-                blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
-                slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-                location: `${sop.inventoryProduct?.bin?.warehouse?.location?.locationName} (${sop.inventoryProduct?.bin?.name})`,
-                qtySf: `${sop.inventoryProduct.slab.receivingLength}*${sop.inventoryProduct.slab.receivingWidth}=${sop.receivingAreaSqFt.toFixed(2)} SF`,
-                receivingLength: sop.inventoryProduct.slab.receivingLength,
-                receivingWidth: sop.inventoryProduct.slab.receivingWidth,
+                serialNo: sop.inventoryProduct?.combinedNumber || '',
+                barcode: slab?.barcode || gp?.barcode || '',
+                blockBundle: slab ? `${slab.block}-${slab.lot}` : '-',
+                slabNo: slab ? slab.slabNumber.toString() : '-',
+                location: `${sop.inventoryProduct?.bin?.warehouse?.location?.locationName || ''} (${sop.inventoryProduct?.bin?.name || ''})`,
+                qtySf: slab
+                    ? `${slab.receivingLength}*${slab.receivingWidth}=${sop.receivingAreaSqFt ? sop.receivingAreaSqFt.toFixed(2) : '0.00'} SF`
+                    : `${sop.receivingAreaSqFt ? sop.receivingAreaSqFt.toFixed(2) : '0.00'} SF`,
+                receivingLength: slab?.receivingLength || 0,
+                receivingWidth: slab?.receivingWidth || 0,
                 remeasureLength,
                 remeasureWidth,
                 calculatedQty,

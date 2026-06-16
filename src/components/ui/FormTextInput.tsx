@@ -29,7 +29,28 @@ export const FormTextInput: React.FC<FormTextInputProps> = ({
     const theme = useTheme();
     const showError = error || hasError;
 
+    // Use local string state for intermediate values
+    const [localValue, setLocalValue] = React.useState<string>(value?.toString() ?? '');
+
+    // Synchronize localValue with value prop when value changes
+    React.useEffect(() => {
+        const propString = value?.toString() ?? '';
+        const propNum = value !== undefined && value !== null ? Number(value) : NaN;
+        const localNum = localValue !== '' ? Number(localValue) : NaN;
+
+        // Only update localValue if the actual numerical value is different
+        // This prevents overwriting intermediate typing like "12." or "12.0"
+        if (Number.isNaN(propNum) && Number.isNaN(localNum)) {
+            if (localValue !== propString) {
+                setLocalValue(propString);
+            }
+        } else if (propNum !== localNum) {
+            setLocalValue(propString);
+        }
+    }, [value]);
+
     const handleChange = (text: string) => {
+        setLocalValue(text);
         if (type === 'number') {
             const numericValue = text === '' ? undefined : Number(text);
             onChange(Number.isNaN(numericValue) ? undefined : numericValue);
@@ -41,7 +62,7 @@ export const FormTextInput: React.FC<FormTextInputProps> = ({
     return (
         <View style={{ minHeight: tokens.size[4].val, width: '100%' }}>
             <Input
-                value={value?.toString() ?? ''}
+                value={localValue}
                 placeholder={placeholder || 'Type here'}
                 keyboardType={type === 'number' ? 'numeric' : 'default'}
                 paddingHorizontal={tokens.space[3].val}

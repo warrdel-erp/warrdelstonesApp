@@ -55,6 +55,14 @@ export interface Inventory {
   totalHoldSlabsCount: number;
   bundles: Bundle[];
   blocks: Block[];
+  primaryImage?: {
+    id: number;
+    isPrimary: boolean;
+    s3File?: {
+      id: number;
+      url?: string;
+    };
+  } | null;
 }
 
 export interface Block {

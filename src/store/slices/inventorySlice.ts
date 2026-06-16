@@ -48,6 +48,6 @@ const inventorySlice = createSlice({
   },
 });
 
-export const {  } = inventorySlice.actions;
+export const { } = inventorySlice.actions;
 
 export default inventorySlice.reducer;

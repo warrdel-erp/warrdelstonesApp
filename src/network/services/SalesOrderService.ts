@@ -59,14 +59,7 @@ export type UpdateReturnPayload = { productIds: number[] };
 export type CreateLoadingOrderPayload = {
   lo?: number;
   loDate: string;
-  expDeliveryDate: string;
-  deliveryNotes?: string;
-  internalNote?: string;
-  deliveryType: string;
-  shippingAddressId: number;
-  paymentTermId?: number | null;
-  customerId: number;
-  salesOrderId: string;
+  packagingListId: string;
   soProducts: Array<{
     id: string;
     loRemeasureLength?: number;
@@ -76,7 +69,14 @@ export type CreateLoadingOrderPayload = {
 
 export type CreatePackagingListPayload = {
   plDate: string;
-  loadingOrderId: string;
+  expDeliveryDate: string;
+  deliveryNotes?: string;
+  internalNote?: string;
+  deliveryType: string;
+  shippingAddressId: number;
+  paymentTermId?: number | null;
+  customerId: number;
+  salesOrderId: string;
   soProducts: Array<{
     id: string;
     plRemeasureLength?: number;

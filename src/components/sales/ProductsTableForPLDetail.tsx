@@ -31,7 +31,7 @@ export interface ProductForPLDetail {
                 id: number;
                 name: string;
             };
-            slab: {
+            slab?: {
                 id: number;
                 serialNumber: number;
                 slabNumber: number;
@@ -40,7 +40,11 @@ export interface ProductForPLDetail {
                 barcode: string;
                 receivingLength: number;
                 receivingWidth: number;
-            };
+            } | null;
+            genericProduct?: {
+                id: number;
+                barcode: string;
+            } | null;
         };
         swapHistories?: any[];
     }>;
@@ -135,8 +139,10 @@ const ProductsTableForPLDetail: React.FC<ProductsTableForPLDetailProps> = ({
 
         const inventoryItems: InventoryItem[] = product.salesOrderProduct.map(sop => {
             const receivingQty = sop.receivingAreaSqFt;
-            const remeasureLength = sop.plRemeasureLength ?? sop.inventoryProduct.slab.receivingLength;
-            const remeasureWidth = sop.plRemeasureWidth ?? sop.inventoryProduct.slab.receivingWidth;
+            const slab = sop.inventoryProduct?.slab;
+            const gp = sop.inventoryProduct?.genericProduct;
+            const remeasureLength = sop.plRemeasureLength ?? slab?.receivingLength ?? 0;
+            const remeasureWidth = sop.plRemeasureWidth ?? slab?.receivingWidth ?? 0;
             const remeasureQty = (remeasureLength * remeasureWidth) / 144;
 
             totalReceivingQty += receivingQty;
@@ -144,21 +150,21 @@ const ProductsTableForPLDetail: React.FC<ProductsTableForPLDetailProps> = ({
             totalAmount += remeasureQty * unitPrice;
 
             return {
-                serialNo: sop.inventoryProduct.combinedNumber,
-                barcode: sop.inventoryProduct.slab.barcode,
-                blockBundle: `${sop.inventoryProduct.slab.block}-${sop.inventoryProduct.slab.lot}`,
-                slabNo: sop.inventoryProduct.slab.slabNumber.toString(),
-                location: sop.inventoryProduct.bin.name,
-                quantity: `${sop.inventoryProduct.slab.receivingLength}×${sop.inventoryProduct.slab.receivingWidth} = ${receivingQty.toFixed(2)} SF`,
+                serialNo: sop.inventoryProduct?.combinedNumber || '',
+                barcode: slab?.barcode || gp?.barcode || '',
+                blockBundle: slab ? `${slab.block}-${slab.lot}` : '-',
+                slabNo: slab ? slab.slabNumber.toString() : '-',
+                location: sop.inventoryProduct?.bin?.name || '',
+                quantity: slab
+                    ? `${slab.receivingLength}×${slab.receivingWidth} = ${receivingQty.toFixed(2)} SF`
+                    : `${receivingQty.toFixed(2)} SF`,
                 slabRemeasureQty: `${remeasureLength}×${remeasureWidth} = ${remeasureQty.toFixed(2)} SF`,
                 salesOrderProductId: sop.id,
                 productId: product.id,
                 historyCount: sop.swapHistories?.length || 0,
                 productName: product.name,
-                productType: 'Slab',
+                productType: slab ? 'Slab' : 'Piece',
             };
-
-
         });
 
         // Get tax percentage from first salesOrderProduct

@@ -49,6 +49,7 @@ export const InventoryNavigator: React.FC = () => {
           key={screen.title}
           component={screen.component}
           options={{
+            headerShown: screen.id !== ScreenId.INVENTORY,
             header: createHeaderComponent(screen.id, 'Inventory', screen.title, screen.isRoot),
           }}
         />
