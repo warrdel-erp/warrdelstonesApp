@@ -60,7 +60,7 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.iconBtn, { flexDirection: 'row', width: 'auto', paddingHorizontal: 8, gap: 4 }]}
             onPress={() => setShowLocationModal(true)}>
             <MapPin size={16} color={theme.colors.text.primary} />

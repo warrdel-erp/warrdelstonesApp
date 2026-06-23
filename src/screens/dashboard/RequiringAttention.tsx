@@ -54,8 +54,8 @@ export const RequiringAttention: React.FC = () => {
       </View>
       <View style={styles.grid}>
         {ATTENTION_ITEMS.map((item) => (
-          <TouchableOpacity 
-            key={item.id} 
+          <TouchableOpacity
+            key={item.id}
             style={[styles.card, { backgroundColor: item.bgColor }]}
           >
             <View style={styles.cardHeader}>

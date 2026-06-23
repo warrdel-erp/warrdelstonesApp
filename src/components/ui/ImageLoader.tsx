@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Image,
@@ -8,6 +8,7 @@ import {
   ImageProps,
   StyleSheet,
   Text,
+  StyleProp,
 } from 'react-native';
 import { theme } from '../../theme';
 
@@ -56,7 +57,19 @@ export const ImageLoader: React.FC<ImageLoaderProps> = ({
   const [imageSource, setImageSource] = useState(source);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Sync state if source prop changes dynamically
+  useEffect(() => {
+    setImageSource(source);
+    setHasError(false);
+    setIsLoading(false);
+  }, [source]);
+
   const handleLoadStart = () => {
+    // Local image assets (requiring a number) load instantly; do not trigger loading indicator
+    if (typeof source === 'number') {
+      return;
+    }
+
     setIsLoading(true);
     setHasError(false);
 
@@ -141,7 +154,7 @@ export const ImageLoader: React.FC<ImageLoaderProps> = ({
     );
   };
 
-  const containerStyles: ViewStyle = [
+  const containerStyles: StyleProp<ViewStyle> = [
     styles.container,
     {
       width,
@@ -151,7 +164,7 @@ export const ImageLoader: React.FC<ImageLoaderProps> = ({
     containerStyle,
   ];
 
-  const imageStyles: ImageStyle = [
+  const imageStyles: StyleProp<ImageStyle> = [
     styles.image,
     {
       width,

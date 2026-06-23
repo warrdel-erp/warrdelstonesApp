@@ -33,9 +33,9 @@ const METRICS = [
 
 export const MTDMetrics: React.FC = () => {
   return (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false} 
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
     >
       {METRICS.map((metric) => (

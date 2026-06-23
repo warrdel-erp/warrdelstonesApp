@@ -446,18 +446,6 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
     const { item } = listData;
     const isExpanded = expandedProductId === item.id;
 
-    // Determine stock status dynamically
-    const slabCount = item.totalSlabsCount || 0;
-    let statusText = 'Out of Stock';
-    let statusColor = '#EF4444';
-    if (slabCount > 10) {
-      statusText = 'In Stock';
-      statusColor = '#10B981';
-    } else if (slabCount > 0) {
-      statusText = 'Low Stock';
-      statusColor = '#F97316';
-    }
-
     if (showGrid) {
       // 2-column Grid style card
       return (
@@ -475,29 +463,44 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
                 height={100}
               />
             ) : (
-              renderAvatar(item.name, gridItemWidth, 100, {
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0,
-              })
+              <View style={{ position: 'relative', overflow: 'hidden', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+                <ImageLoader
+                  source={require('../../assets/images/sample_marble_image.jpeg')}
+                  style={styles.gridImage}
+                  width={gridItemWidth}
+                  height={100}
+                />
+                <View style={styles.sampleBadge}>
+                  <Caption style={styles.sampleBadgeText}>SAMPLE</Caption>
+                </View>
+              </View>
             )}
 
             <View style={styles.gridDetails}>
               <View style={styles.gridTitleWrap}>
                 <BodyText style={styles.gridProductName} numberOfLines={1}>{item.name}</BodyText>
-                <Star size={12} color="#F59E0B" fill="#F59E0B" style={{ marginLeft: 2 }} />
               </View>
 
               <BodyText style={styles.gridSubText} numberOfLines={1}>
-                {item.alternativeName || 'N/A'} • {item.subCategory?.name || 'Marble'}
+                {item.isSlabType ? 'Slab' : 'Generic'} • {item.subCategory?.name || 'Marble'}
               </BodyText>
 
-              <View style={styles.gridFooter}>
-                <BodyText style={[styles.gridStatusText, { color: statusColor }]}>{statusText}</BodyText>
-                <View style={styles.gridSlabsContainer}>
-                  <BodyText style={styles.gridSlabsCount}>{slabCount}</BodyText>
-                  <Caption style={styles.gridSlabsLabel}> Slabs</Caption>
+              <View style={styles.gridMetrics}>
+                <View style={styles.gridMetricItem}>
+                  <Caption style={styles.gridMetricLabel}>Avg Landed</Caption>
+                  <BodyText style={styles.gridMetricValue}>
+                    {item.averageLandedCost?.avgLandedCost !== undefined && item.averageLandedCost?.avgLandedCost !== null
+                      ? `$${Number(item.averageLandedCost.avgLandedCost).toFixed(2)}`
+                      : '$0.00'}
+                  </BodyText>
+                </View>
+                <View style={styles.gridMetricItem}>
+                  <Caption style={styles.gridMetricLabel}>Available</Caption>
+                  <BodyText style={styles.gridMetricValue} numberOfLines={1}>
+                    {item.isSlabType
+                      ? `${Number(item.totalAvailableQuantity ?? 0).toFixed(0)} SF`
+                      : `${item.totalAvailableQuantityUnit ?? 0} U`}
+                  </BodyText>
                 </View>
               </View>
             </View>
@@ -511,10 +514,7 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
     // Modern 1-column List style card (mockup redesign)
     return (
       <View style={styles.cardContainer}>
-        <TouchableOpacity
-          onPress={() => toggleExpand(item.id)}
-          activeOpacity={0.8}
-          style={styles.cardHeaderArea}>
+        <View style={styles.cardHeaderArea}>
 
           <View style={styles.mainRow}>
             {/* Left Slab Image / Avatar */}
@@ -522,57 +522,83 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
               {item.primaryImage?.s3File?.url ? (
                 <ImageLoader
                   source={item.primaryImage.s3File.url}
-                  style={styles.productThumbnail}
-                  width={84}
-                  height={84}
+                  style={{ borderRadius: 0 }}
+                  width={80}
+                  height={140}
+                  containerStyle={{ height: '100%', borderRadius: 0 }}
+                  imageStyle={{ height: '100%', borderRadius: 0 }}
                 />
               ) : (
-                renderAvatar(item.name, 84, 84, { borderRadius: 10 })
+                <View style={{ width: 80, height: '100%', position: 'relative' }}>
+                  <ImageLoader
+                    source={require('../../assets/images/sample_marble_image.jpeg')}
+                    style={{ borderRadius: 0 }}
+                    width={80}
+                    height={140}
+                    containerStyle={{ height: '100%', borderRadius: 0 }}
+                    imageStyle={{ height: '100%', borderRadius: 0 }}
+                  />
+                  <View style={styles.sampleBadge}>
+                    <Caption style={styles.sampleBadgeText}>SAMPLE</Caption>
+                  </View>
+                </View>
               )}
             </View>
 
             {/* Right Information Details */}
             <View style={styles.detailsContainer}>
-              {/* Row 1: Name, Star Icon, Stock Badge */}
+              {/* Row 1: Name */}
               <View style={styles.cardTitleRow}>
                 <View style={styles.nameStarWrap}>
                   <BodyText style={styles.productName} numberOfLines={1}>{item.name}</BodyText>
-                  <Star size={14} color="#F59E0B" fill="#F59E0B" style={{ marginLeft: 4 }} />
                 </View>
-                <BodyText style={[styles.stockStatusText, { color: statusColor }]}>
-                  {statusText}
-                </BodyText>
               </View>
 
-              {/* Row 2: Alternative Code / Category, Bold Slab Unit count */}
+              {/* Row 2: Category / Subcategory */}
               <View style={styles.cardInfoRow}>
                 <BodyText style={styles.subText} numberOfLines={1}>
-                  {item.alternativeName || 'N/A'}  •  {item.subCategory?.name || 'Marble'}
+                  {item.isSlabType ? 'Slab' : 'Generic'}  •  {item.subCategory?.name || 'Marble'}
                 </BodyText>
-
-                <View style={styles.slabsBadgeWrap}>
-                  <BodyText style={styles.slabsCountNum}>{slabCount}</BodyText>
-                  <Caption style={styles.slabsCountLabel}>Slabs</Caption>
-                </View>
               </View>
 
               {/* Row 3: Tags (Pill Tag Badges for Finish & Color) */}
               <View style={styles.tagsRow}>
                 {item.group?.name ? (
-                  <View style={styles.pillTag}>
-                    <BodyText style={styles.pillTagText}>{item.group.name}</BodyText>
+                  <View style={[styles.pillTag, { backgroundColor: '#EEF2FF' }]}>
+                    <BodyText style={[styles.pillTagText, { color: '#4F46E5' }]}>{item.group.name}</BodyText>
                   </View>
                 ) : null}
                 {item.thickness ? (
-                  <View style={styles.pillTag}>
-                    <BodyText style={styles.pillTagText}>{item.thickness}cm</BodyText>
+                  <View style={[styles.pillTag, { backgroundColor: '#FFF7ED' }]}>
+                    <BodyText style={[styles.pillTagText, { color: '#EA580C' }]}>{item.thickness}cm</BodyText>
                   </View>
                 ) : null}
                 {item.baseColor?.name ? (
-                  <View style={[styles.pillTag, styles.pillTagColor]}>
-                    <BodyText style={[styles.pillTagText, styles.pillTagTextColor]}>{item.baseColor.name}</BodyText>
+                  <View style={[styles.pillTag, { backgroundColor: '#F0FDF4' }]}>
+                    <BodyText style={[styles.pillTagText, { color: '#16A34A' }]}>{item.baseColor.name}</BodyText>
                   </View>
                 ) : null}
+              </View>
+
+              {/* Metrics Row (Avg Landed Cost & Total Available Quantity) */}
+              <View style={styles.metricsRow}>
+                <View style={styles.metricItem}>
+                  <Caption style={styles.metricLabel}>Available</Caption>
+                  <BodyText style={styles.metricValue}>
+                    {item.isSlabType
+                      ? `${Number(item.totalAvailableQuantity ?? 0).toFixed(2)} SF (${item.totalAvailableQuantityUnit ?? 0} Slabs)`
+                      : `${item.totalAvailableQuantityUnit ?? 0} Units`}
+                  </BodyText>
+                </View>
+                <View style={styles.metricDivider} />
+                <View style={styles.metricItem}>
+                  <Caption style={styles.metricLabel}>Avg Landed Cost</Caption>
+                  <BodyText style={styles.metricValue}>
+                    {item.averageLandedCost?.avgLandedCost !== undefined && item.averageLandedCost?.avgLandedCost !== null
+                      ? `$${Number(item.averageLandedCost.avgLandedCost).toFixed(2)}`
+                      : '$0.00'}
+                  </BodyText>
+                </View>
               </View>
 
               {/* Row 4: Bin Code Location tag, Options action buttons */}
@@ -591,15 +617,21 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
                     <MaterialIcon name="info-outline" size={20} color="#0891B2" />
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.dotsButton}>
-                    <MoreVertical size={16} color="#64748B" />
+                  <TouchableOpacity
+                    onPress={() => toggleExpand(item.id)}
+                    style={styles.expandButton}>
+                    <MaterialIcon
+                      name={isExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+                      size={24}
+                      color="#64748B"
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
 
             </View>
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* Expanded Children Accordion */}
         {isExpanded && renderChildren(item)}
@@ -619,7 +651,7 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
   return (
     <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
 
-      {/* Search Input Bar */}
+      {/* Search Input Bar & Layout Toggle */}
       <View style={styles.searchBarContainer}>
         <View style={styles.searchInner}>
           <Search size={18} color="#94A3B8" style={{ marginRight: 8 }} />
@@ -634,6 +666,20 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
             <MaterialIcon name="mic" size={20} color="#94A3B8" />
           </TouchableOpacity>
         </View>
+
+        <View style={styles.layoutToggleContainer}>
+          <TouchableOpacity
+            style={[styles.layoutButton, !showGrid && styles.layoutButtonActive]}
+            onPress={() => setShowGrid(false)}>
+            <List size={16} color={!showGrid ? '#0891B2' : '#64748B'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.layoutButton, showGrid && styles.layoutButtonActive]}
+            onPress={() => setShowGrid(true)}>
+            <LayoutGrid size={16} color={showGrid ? '#0891B2' : '#64748B'} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Horizontal Scroll Filter Pills */}
@@ -642,6 +688,14 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filtersScrollView}>
+
+          {/* Total Items Pill */}
+          <View style={styles.totalItemsPill}>
+            <Package size={14} color="#0891B2" style={{ marginRight: 4 }} />
+            <BodyText style={styles.totalItemsText}>
+              {total.toLocaleString()} Items
+            </BodyText>
+          </View>
 
           <TouchableOpacity
             style={[styles.filterPill, selectedCategory && styles.filterPillSelected]}
@@ -693,35 +747,6 @@ export const InventoryListPage: React.FC<InventoryListPageProps> = ({ type }) =>
           </TouchableOpacity>
 
         </ScrollView>
-      </View>
-
-      {/* Stats Summary Box, Sorting & Grid/List switches */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statsCard}>
-          <View style={styles.packageIconWrap}>
-            <Package size={20} color="#0891B2" />
-          </View>
-          <View style={styles.statsTextWrap}>
-            <BodyText style={styles.statsCount}>{total.toLocaleString()}</BodyText>
-            <Caption style={styles.statsLabel}>Total Items</Caption>
-          </View>
-        </View>
-
-        <View style={styles.statsActions}>
-          <View style={styles.layoutToggleContainer}>
-            <TouchableOpacity
-              style={[styles.layoutButton, !showGrid && styles.layoutButtonActive]}
-              onPress={() => setShowGrid(false)}>
-              <List size={16} color={!showGrid ? '#0891B2' : '#64748B'} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.layoutButton, showGrid && styles.layoutButtonActive]}
-              onPress={() => setShowGrid(true)}>
-              <LayoutGrid size={16} color={showGrid ? '#0891B2' : '#64748B'} />
-            </TouchableOpacity>
-          </View>
-        </View>
       </View>
 
       {/* Main List */}
@@ -828,8 +853,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   searchInner: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
@@ -916,66 +945,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Stats Card & Header row
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#F8FAFC',
-  },
-  statsCard: {
+  // Total Items Pill
+  totalItemsPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ECFEFF',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     borderWidth: 1,
     borderColor: '#CFFAFE',
-  },
-  packageIconWrap: {
-    backgroundColor: '#CFFAFE',
-    padding: 6,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  statsTextWrap: {
-    justifyContent: 'center',
-  },
-  statsCount: {
-    fontSize: 15,
-    fontFamily: theme.typography.fontFamily.bold,
-    color: '#0891B2',
-    lineHeight: 18,
-  },
-  statsLabel: {
-    fontSize: 10,
-    color: '#0891B2',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    lineHeight: 11,
-  },
-  statsActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    paddingHorizontal: 10,
+    borderRadius: 20,
+    paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  actionButtonText: {
+  totalItemsText: {
     fontSize: 13,
-    color: '#475569',
-    fontFamily: theme.typography.fontFamily.medium,
+    color: '#0891B2',
+    fontFamily: theme.typography.fontFamily.bold,
   },
   layoutToggleContainer: {
     flexDirection: 'row',
@@ -1005,33 +989,41 @@ const styles = StyleSheet.create({
   cardContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   cardHeaderArea: {
-    padding: 12,
+    padding: 0,
   },
   mainRow: {
+    position: 'relative',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
   },
   thumbnailContainer: {
-    borderRadius: 10,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 80,
+    borderTopLeftRadius: 13,
+    borderBottomLeftRadius: 13,
     overflow: 'hidden',
     backgroundColor: '#F1F5F9',
   },
   productThumbnail: {
-    borderRadius: 10,
+    borderRadius: 0,
   },
   detailsContainer: {
     flex: 1,
+    paddingVertical: 12,
+    paddingRight: 12,
+    paddingLeft: 92,
   },
   cardTitleRow: {
     flexDirection: 'row',
@@ -1183,31 +1175,80 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.medium,
     marginBottom: 6,
   },
-  gridFooter: {
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  metricItem: {
+    flex: 1,
+  },
+  metricDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 12,
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: '#059669',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+    fontFamily: theme.typography.fontFamily.bold,
+  },
+  metricValue: {
+    fontSize: 13,
+    color: '#0F172A',
+    fontFamily: theme.typography.fontFamily.bold,
+  },
+  gridMetrics: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 6,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 8,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#E0F2FE',
+    marginTop: 6,
+    gap: 8,
   },
-  gridStatusText: {
-    fontSize: 10,
-    fontFamily: theme.typography.fontFamily.bold,
-    textTransform: 'uppercase',
+  gridMetricItem: {
+    flex: 1,
   },
-  gridSlabsContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  gridSlabsCount: {
-    fontSize: 14,
-    fontFamily: theme.typography.fontFamily.bold,
-    color: '#0F172A',
-  },
-  gridSlabsLabel: {
+  gridMetricLabel: {
     fontSize: 9,
-    color: '#64748B',
+    color: '#0284C7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+    fontFamily: theme.typography.fontFamily.medium,
+  },
+  gridMetricValue: {
+    fontSize: 11,
+    color: '#0369A1',
+    fontFamily: theme.typography.fontFamily.bold,
+  },
+  sampleBadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  sampleBadgeText: {
+    fontSize: 9,
+    color: '#FFFFFF',
+    fontFamily: theme.typography.fontFamily.bold,
+    letterSpacing: 0.5,
   },
 
   // Accordion details style
@@ -1216,6 +1257,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+  },
+  expandButton: {
+    padding: 4,
+    marginLeft: 4,
   },
   childrenHeaderText: {
     fontSize: 10,

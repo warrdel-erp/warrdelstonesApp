@@ -15,6 +15,7 @@ const config = {
       'bin',
       'txt',
       'jpg',
+      'jpeg',
       'png',
       'json',
       'mp4',

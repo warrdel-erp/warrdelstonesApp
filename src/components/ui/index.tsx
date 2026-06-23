@@ -29,6 +29,7 @@ export { default as Spinner } from './Spinner';
 export { StatusBadge } from './StatusBadge';
 export { default as Tabs } from './Tabs';
 export { default as TextInput } from './TextInput';
+export { default as ModernListCard } from './ModernListCard';
 
 // Export all Typography components
 export {
@@ -39,6 +40,5 @@ export {
   Heading4,
   Heading5,
   Heading6,
-  Caption
+  Caption,
 } from './Typography';
-

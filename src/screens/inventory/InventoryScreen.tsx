@@ -30,8 +30,6 @@ const InventoryScreen: React.FC<any> = ({ navigation }) => {
   const pagerViewRef = React.useRef<PagerView>(null);
   const [currentTab, setCurrentTab] = React.useState(0);
   const insets = useSafeAreaInsets();
-  const { selectedLocation } = useAppState();
-  const [showLocationModal, setShowLocationModal] = React.useState(false);
 
   const handleTabPress = useCallback((index: number) => {
     pagerViewRef.current?.setPage(index);
@@ -45,44 +43,10 @@ const InventoryScreen: React.FC<any> = ({ navigation }) => {
     <BaseScreen scrollable={false} keyboardAware={false} style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity 
-            onPress={() => (navigation as any)?.toggleDrawer?.()} 
-            style={styles.headerBtn}>
-            <Menu size={22} color={theme.colors.text.primary} />
-          </TouchableOpacity>
-          <Heading4 style={styles.headerTitle}>Inventory</Heading4>
-        </View>
+      {/* Safe Area Notch Spacer */}
+      <View style={{ height: Math.max(insets.top, 12), backgroundColor: theme.colors.background }} />
 
-        <View style={styles.headerRight}>
-          {/* Location button */}
-          <TouchableOpacity
-            style={styles.locationSelectorBtn}
-            onPress={() => setShowLocationModal(true)}>
-            <MapPin size={13} color="#0891B2" />
-            <Caption style={styles.locationText} numberOfLines={1}>
-              {selectedLocation?.locationName || 'Location'}
-            </Caption>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.headerBtn}>
-            <Scan size={20} color={theme.colors.text.primary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.headerBtn}>
-            <View style={styles.bellIconContainer}>
-              <Bell size={20} color={theme.colors.text.primary} />
-              <View style={styles.badgeContainer}>
-                <Caption style={styles.badgeText}>3</Caption>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={{ padding: theme.spacing.sm }}>
+      <View style={{ paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.sm }}>
         <Tabs
           variant={'pill-outlined'}
           scrollable={false}
@@ -109,74 +73,12 @@ const InventoryScreen: React.FC<any> = ({ navigation }) => {
         </View>
 
       </PagerView>
-
-      <AppContextSelector visible={showLocationModal} onClose={() => setShowLocationModal(false)} />
     </BaseScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    color: theme.colors.text.primary,
-  },
-  headerBtn: {
-    padding: 6,
-  },
-  locationSelectorBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFEFF',
-    borderColor: '#CFFAFE',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    gap: 4,
-    maxWidth: 110,
-  },
-  locationText: {
-    color: '#0891B2',
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-  },
-  bellIconContainer: {
-    position: 'relative',
-  },
-  badgeContainer: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#EF4444',
-    borderRadius: 8,
-    width: 14,
-    height: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: 'bold',
-  },
+  // Styles cleaned up as header is removed
 });
 
 export default InventoryScreen;

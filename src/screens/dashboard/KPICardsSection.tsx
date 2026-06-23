@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { FileText, ShoppingCart, Truck, AlertTriangle } from '@tamagui/lucide-icons';
 import { BodyText, Heading4 } from '../../components/ui';
 import theme from '../../theme';
 import { dashboardService } from '../../network/services/DashboardService';
@@ -9,15 +10,8 @@ interface KPIItem {
   value: number;
   color: string;
   bgColor: string;
-  icon: string;
+  icon: any;
 }
-
-const ICONS: Record<string, string> = {
-  'Open POs': '📋',
-  'Open SOs': '🛒',
-  'In Transit': '🚚',
-  'Low Stock': '⚠️',
-};
 
 export const KPICardsSection: React.FC = () => {
   const [openPOs, setOpenPOs] = useState(0);
@@ -49,10 +43,34 @@ export const KPICardsSection: React.FC = () => {
   }, []);
 
   const kpis: KPIItem[] = [
-    { title: 'Open POs', value: openPOs, color: '#2563EB', bgColor: '#DBEAFE', icon: '📋' },
-    { title: 'Open SOs', value: openSOs, color: '#059669', bgColor: '#D1FAE5', icon: '🛒' },
-    { title: 'In Transit', value: poInTransit, color: '#7C3AED', bgColor: '#EDE9FE', icon: '🚚' },
-    { title: 'Low Stock', value: 0, color: '#E11D48', bgColor: '#FFE4E6', icon: '⚠️' },
+    {
+      title: 'Open POs',
+      value: openPOs,
+      color: '#3B82F6',
+      bgColor: 'rgba(59, 130, 246, 0.08)',
+      icon: FileText,
+    },
+    {
+      title: 'Open SOs',
+      value: openSOs,
+      color: '#10B981',
+      bgColor: 'rgba(16, 185, 129, 0.08)',
+      icon: ShoppingCart,
+    },
+    {
+      title: 'In Transit',
+      value: poInTransit,
+      color: '#8B5CF6',
+      bgColor: 'rgba(139, 92, 246, 0.08)',
+      icon: Truck,
+    },
+    {
+      title: 'Low Stock',
+      value: 0,
+      color: '#EF4444',
+      bgColor: 'rgba(239, 68, 68, 0.08)',
+      icon: AlertTriangle,
+    },
   ];
 
   return (
@@ -64,25 +82,26 @@ export const KPICardsSection: React.FC = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
-        {kpis.map((kpi, idx) => (
-          <View key={idx} style={[styles.card, { borderLeftColor: kpi.color }]}>
-            <View style={[styles.iconWrap, { backgroundColor: kpi.bgColor }]}>
-              <BodyText style={styles.iconText}>{kpi.icon}</BodyText>
+        {kpis.map((kpi, idx) => {
+          const IconComponent = kpi.icon;
+          return (
+            <View key={idx} style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={[styles.iconWrap, { backgroundColor: kpi.bgColor }]}>
+                  <IconComponent size={14} color={kpi.color} />
+                </View>
+              </View>
+              <View style={styles.cardBody}>
+                {loading ? (
+                  <ActivityIndicator size="small" color={kpi.color} style={styles.loader} />
+                ) : (
+                  <Heading4 style={styles.kpiValue}>{kpi.value}</Heading4>
+                )}
+                <BodyText style={styles.kpiLabel}>{kpi.title}</BodyText>
+              </View>
             </View>
-            <View style={styles.cardBody}>
-              <BodyText style={[styles.kpiLabel, { color: theme.colors.text.secondary }]}>
-                {kpi.title}
-              </BodyText>
-              {loading ? (
-                <ActivityIndicator size="small" color={kpi.color} />
-              ) : (
-                <Heading4 style={[styles.kpiValue, { color: kpi.color }]}>
-                  {kpi.value}
-                </Heading4>
-              )}
-            </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -90,7 +109,7 @@ export const KPICardsSection: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
   },
   header: {
     paddingHorizontal: theme.spacing.md,
@@ -102,46 +121,52 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: theme.spacing.md,
-    gap: 12,
+    gap: 10,
+    paddingBottom: 4, // for shadows
   },
   card: {
-    width: 130,
+    width: 95,
+    height: 85,
     backgroundColor: theme.colors.white,
     borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderLeftWidth: 4,
+    padding: 10,
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconText: {
-    fontSize: 18,
-  },
   cardBody: {
-    flex: 1,
+    marginTop: 2,
+  },
+  loader: {
+    alignSelf: 'flex-start',
+    height: 22,
+  },
+  kpiValue: {
+    fontSize: 18,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    lineHeight: 22,
   },
   kpiLabel: {
     fontSize: 10,
     fontFamily: theme.typography.fontFamily.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  kpiValue: {
-    fontSize: 22,
-    fontFamily: theme.typography.fontFamily.bold,
-    lineHeight: 28,
+    color: theme.colors.text.secondary,
+    marginTop: 1,
   },
 });

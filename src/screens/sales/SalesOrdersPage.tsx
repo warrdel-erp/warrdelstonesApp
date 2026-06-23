@@ -3,9 +3,7 @@ import moment from 'moment';
 import React from 'react';
 import { FlatList, ListRenderItemInfo, TouchableOpacity, View } from 'react-native';
 import { getTokens, useTheme } from 'tamagui';
-import { FloatingActionButton, StatusBadge } from '../../components/ui';
-import CardWithHeader from '../../components/ui/CardWithHeader';
-import DetailGridRenderer from '../../components/ui/DetailGridRenderer';
+import { FloatingActionButton, StatusBadge, BodyText, ModernListCard } from '../../components/ui';
 import { EmptyList } from '../../components/ui/EmptyList.tsx';
 import { ScreenLoadingIndicator } from '../../components/ui/ScreenLoadingIndicator.tsx';
 import NavigationService from '../../navigation/NavigationService';
@@ -13,6 +11,9 @@ import { ScreenId } from '../../navigation/navigationConstants';
 import { services } from '../../network';
 import { SalesOrder } from '../../types/SalesOrderTypes.ts';
 import { showErrorToast } from '../../utils';
+import appTheme from '../../theme';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import { Calendar } from '@tamagui/lucide-icons';
 
 export type SalesType =
   | ''
@@ -38,7 +39,7 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
   useFocusEffect(
     React.useCallback(() => {
       getSalesOrders();
-      return () => { };
+      return () => {};
     }, [filter]),
   );
 
@@ -60,7 +61,10 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { status: 'success' | 'warning' | 'error' | 'info'; text: string }> = {
+    const statusMap: Record<
+      string,
+      { status: 'success' | 'warning' | 'error' | 'info'; text: string }
+    > = {
       open: { status: 'info', text: 'Open' },
       closed: { status: 'success', text: 'Closed' },
       pending: { status: 'warning', text: 'Pending' },
@@ -68,105 +72,70 @@ export const SalesOrdersPage: React.FC<SalesOrdersPageProps> = props => {
     return statusMap[status.toLowerCase()] || { status: 'info', text: status };
   };
 
-  const ItemSeparator = () => <View style={{ height: tokens.space[2].val }} />;
+  const ItemSeparator = () => <View style={{ height: 12 }} />;
 
   const renderSalesOrderItem = (listItem: ListRenderItemInfo<SalesOrder>) => {
     const item = listItem.item;
-    const serialNumber = listItem.index + 1;
     const statusProps = getStatusBadge(item.status);
 
-    const detailItems = [
-      {
-        label: 'Customer',
-        value: `${item.customer.name}\n${item.customer.primaryPhoneNumber}`,
-        width: '30%',
-      },
-      {
-        label: 'Type',
-        value: item.customer.scope?.value ?? '-',
-        width: '30%',
-      },
-      {
-        label: 'Status',
-        value: <StatusBadge {...statusProps} variant="soft" size="small" />,
-        width: '30%',
-      },
-      {
-        label: 'Created By',
-        value: `${item.createdBy.username}\n${item.createdBy.phone}`,
-        width: '30%',
-      },
-      {
-        label: 'Date & Time',
-        value: `${moment(item.createdAt).format('DD-MM-YYYY')}\n${moment(item.createdAt).format('HH:mm:ss')}`,
-        width: '30%',
-      },
-      {
-        label: 'Location',
-        value: item.soLocation.locationName,
-        width: '30%',
-      },
-      {
-        label: 'Amount',
-        value: item.totalAmount,
-        type: 'money' as const,
-        valueStyle: { fontWeight: '600', color: theme.statusSuccess?.val || '#10B981' },
-        width: '30%',
-      },
-      {
-        label: 'Tax',
-        value: item.tax ? `${item.tax.code} (${item.tax.value}%)` : 'N/A',
-        width: '30%',
-      },
-      {
-        label: '%Fulfill',
-        value: item.fulFilled ? `${item.fulFilled.toFixed(2)}%` : 'N/A',
-        width: '30%',
-      },
-      {
-        label: 'Hold Days',
-        value: item.customer.daysForHold ? `${item.customer.daysForHold} days` : 'N/A',
-        width: '30%',
-      },
-      {
-        label: 'Customer PO#',
-        value: item.customerPo ?? 'N/A',
-        width: '30%',
-      },
-      ...(item.loadingOrders?.length > 0
-        ? [
-          {
-            label: 'Sub-Transactions',
-            value: item.loadingOrders
-              .map((lo) => `${lo.code}${lo.packagingList?.code ? ' | ' + lo.packagingList.code : ''}`)
-              .join('\n'),
-            width: '100%',
-          },
-        ]
-        : []),
-    ];
-
     return (
-      <TouchableOpacity
-        key={item.id.toString()}
-        activeOpacity={0.9}
-      >
-        <CardWithHeader
-          subheading='Sales Order'
-          title={
-            `SO-${item.clientSoNumber}`
-          }
-          actions={[{
-            label: 'View',
-            // icon: 'eye',
-            onPress: () => {
-              NavigationService.navigate(ScreenId.SALES_ORDER_DETAIL, { salesOrderId: item.id });
-            },
-          }]}
-        >
-          <DetailGridRenderer items={detailItems} gap={tokens.space[3].val} />
-        </CardWithHeader>
-      </TouchableOpacity>
+      <ModernListCard
+        title={`SO-${item.clientSoNumber}`}
+        statusBadge={<StatusBadge {...statusProps} variant="soft" size="small" />}
+        subtitle={`${item.customer.name} • ${item.customer.scope?.value ?? '-'}`}
+        tags={[
+          item.soLocation.locationName,
+          `By: ${item.createdBy.username}`,
+          item.customerPo ? `PO: ${item.customerPo}` : null,
+          item.customer.daysForHold ? `Hold: ${item.customer.daysForHold}d` : null,
+        ]}
+        metrics={[
+          {
+            label: 'Amount',
+            value: `$${Number(item.totalAmount).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
+            color: theme.statusSuccess?.val || '#10B981',
+          },
+          {
+            label: '% Fulfill',
+            value:
+              item.fulFilled !== null && item.fulFilled !== undefined
+                ? `${item.fulFilled.toFixed(2)}%`
+                : 'N/A',
+          },
+        ]}
+        footerLeft={
+          <>
+            <Calendar size={13} color="#64748B" />
+            <BodyText
+              style={{
+                fontSize: 12,
+                color: '#64748B',
+                fontFamily: appTheme.typography.fontFamily.bold,
+              }}>
+              {moment(item.createdAt).format('DD-MM-YYYY HH:mm')}
+            </BodyText>
+          </>
+        }
+        footerRight={
+          <TouchableOpacity
+            onPress={() =>
+              NavigationService.navigate(ScreenId.SALES_ORDER_DETAIL, {
+                salesOrderId: item.id,
+              })
+            }
+            style={{ padding: 4 }}>
+            <MaterialIcon name="info-outline" size={20} color="#0891B2" />
+          </TouchableOpacity>
+        }
+        onPress={() =>
+          NavigationService.navigate(ScreenId.SALES_ORDER_DETAIL, {
+            salesOrderId: item.id,
+          })
+        }
+      />
     );
   };
 

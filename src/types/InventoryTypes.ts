@@ -55,6 +55,11 @@ export interface Inventory {
   totalHoldSlabsCount: number;
   bundles: Bundle[];
   blocks: Block[];
+  averageLandedCost?: {
+    avgLandedCost: number | string | null;
+  } | null;
+  totalAvailableQuantity?: number;
+  totalAvailableQuantityUnit?: number;
   primaryImage?: {
     id: number;
     isPrimary: boolean;

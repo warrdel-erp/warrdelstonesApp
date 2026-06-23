@@ -138,7 +138,7 @@ export const theme: Theme = {
     yellow: '#F59E0B',
 
     // Background colors
-    background: '#FAFBFC',
+    background: '#F3F4F6',
     surface: '#FFFFFF',
     surfaceVariant: '#F8F9FA',
     white: '#FFFFFF',
